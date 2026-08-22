@@ -1,1 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Train Transit</title>
+  
+  <!-- Leaflet CSS (Mapa) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+  <!-- Pestaña 1: Inicio -->
+  <section id="tab-inicio" class="tab-content">
+    <div class="header-search">
+      <input type="text" placeholder="Buscar tren, estación o línea...">
+    </div>
+    <div class="card-section">
+      <h3>Líneas Favoritas</h3>
+      <div class="horizontal-scroll">
+        <div class="badge-card">C5</div>
+        <div class="badge-card">AVE</div>
+        <div class="badge-card">C1</div>
+      </div>
+    </div>
+    <div class="card-section">
+      <h3>Estado del Servicio</h3>
+      <div class="status-banner info">Sin incidencias graves reportadas</div>
+    </div>
+  </section>
+
+  <!-- Pestaña 2: Mapa -->
+  <section id="tab-mapa" class="tab-content active">
+    <div id="map"></div>
+    <div class="map-search-bar">
+      <input type="text" placeholder="Estaciones, rutas, ciudades...">
+    </div>
+
+    <!-- Bottom Sheet de Detalle del Tren -->
+    <div id="train-sheet" class="bottom-sheet hidden">
+      <div class="sheet-header">
+        <div class="sheet-drag-handle"></div>
+        <button class="close-btn" onclick="closeTrainSheet()">×</button>
+      </div>
+      <div class="sheet-status">
+        <span class="live-dot"></span> <span id="operator-name">Renfe Cercanías</span>
+      </div>
+      <div class="sheet-title-row">
+        <h2 id="train-line">C1</h2>
+        <span id="line-badge" class="badge">C1</span>
+      </div>
+      <div class="sheet-subinfo">
+        <span>Train</span> • <span id="train-speed">⏱️ -- km/h</span>
+      </div>
+      <p id="next-stop-text" class="next-stop">En camino a Palazuelo</p>
+
+      <div class="action-buttons">
+        <button class="btn-action">📍 Rastrear</button>
+        <button class="btn-action active">🎯 Siguiendo</button>
+        <button class="btn-action">🔀 Route View</button>
+      </div>
+
+      <div class="progress-bar-container">
+        <div class="progress-line">
+          <div class="progress-dot"></div>
+          <div class="progress-arrow">➔</div>
+          <div class="progress-dot"></div>
+          <div class="progress-dot"></div>
+        </div>
+      </div>
+
+      <!-- Contenido expandible (Paradas) -->
+      <div class="sheet-expanded-content">
+        <h3>Itinerario</h3>
+        <ul id="stops-timeline" class="timeline">
+          <!-- Se cargan por JS -->
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pestaña 3: Líneas -->
+  <section id="tab-lineas" class="tab-content">
+    <div class="lineas-container">
+      <h2>Red Ferroviaria</h2>
+      
+      <!-- Destacados -->
+      <div class="featured-cards">
+        <div class="card-featured ave">Alta Velocidad - Larga Distancia</div>
+        <div class="card-featured media">Media Distancia</div>
+      </div>
+
+      <!-- Cercanías -->
+      <h3>Núcleos de Cercanías</h3>
+      <div class="accordion">
+        <details><summary>Asturias</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span></div></details>
+        <details><summary>Bilbao</summary><div class="lines-grid"><span>C1</span><span>C2</span></div></details>
+        <details><summary>Madrid</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span><span>C5</span></div></details>
+        <details><summary>Rodalies de Catalunya</summary><div class="lines-grid"><span>R1</span><span>R2</span><span>R4</span></div></details>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menú de Navegación Flotante -->
+  <nav class="floating-nav">
+    <button class="nav-btn" onclick="switchTab('inicio')">
+      <span class="icon">🏠</span>
+      <span class="label">Inicio</span>
+    </button>
+    <button class="nav-btn active" onclick="switchTab('mapa')">
+      <span class="icon">🗺️</span>
+      <span class="label">Mapa</span>
+    </button>
+    <button class="nav-btn" onclick="switchTab('lineas')">
+      <span class="icon">🚆</span>
+      <span class="label">Líneas</span>
+    </button>
+  </nav>
+
+  <!-- JS de Leaflet y Aplicación -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
