@@ -28,7 +28,6 @@
       color: #0f172a;
     }
 
-    /* Navegación y Pestañas */
     .tab-content {
       display: none;
       width: 100vw;
@@ -40,7 +39,6 @@
       display: block;
     }
 
-    /* Estilos Específicos del Mapa */
     #tab-mapa {
       height: calc(100vh - 75px);
       position: relative;
@@ -77,11 +75,14 @@
       transform: scale(1.15);
     }
 
-    /* Bottom Sheet Slider del Mapa */
     #bottom-sheet {
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
       box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
+    }
+
+    .sheet-hidden {
+      transform: translateY(100%);
     }
 
     .sheet-collapsed {
@@ -102,7 +103,6 @@
       padding-bottom: 12px;
     }
 
-    /* Barra de Navegación Flotante Inferior */
     .floating-nav {
       position: fixed;
       bottom: 10px;
@@ -201,22 +201,8 @@
       <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
         <i class="fa-solid fa-star text-amber-500"></i> Estaciones Favoritas
       </h2>
-      <div class="space-y-2.5">
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between cursor-pointer" onclick="openStationModal('Madrid Puerta de Atocha')">
-          <div class="flex items-center gap-3">
-            <i class="fa-solid fa-star text-amber-400 text-base"></i>
-            <p class="font-bold text-slate-800 text-sm">Madrid Puerta de Atocha</p>
-          </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-        </div>
-
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between cursor-pointer" onclick="openStationModal('Gijón Sanz Crespo')">
-          <div class="flex items-center gap-3">
-            <i class="fa-solid fa-star text-amber-400 text-base"></i>
-            <p class="font-bold text-slate-800 text-sm">Gijón Sanz Crespo</p>
-          </div>
-          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-        </div>
+      <div id="favorites-list" class="space-y-2.5">
+        <!-- Renderizado dinámicamente -->
       </div>
     </div>
   </section>
@@ -239,19 +225,19 @@
           <i id="arrow-cat-ave" class="fa-solid fa-chevron-right text-xs text-slate-400 transition-transform duration-200"></i>
         </div>
         <div id="cat-ave" class="hidden border-t border-slate-100 bg-slate-50/50 p-3 space-y-2">
-          <div class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+          <div onclick="goToTrainOnMap('AVE-03142')" class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs cursor-pointer hover:border-indigo-300 transition-all">
             <div>
               <p class="font-bold text-slate-800">AVE 03142 • Madrid ➔ Barcelona</p>
               <p class="text-slate-400 mt-0.5">En trayecto • Próxima: Zaragoza</p>
             </div>
-            <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-800 font-bold">En hora</span>
+            <i class="fa-solid fa-location-dot text-indigo-600 text-sm"></i>
           </div>
-          <div class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+          <div onclick="goToTrainOnMap('AVLO-02105')" class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs cursor-pointer hover:border-indigo-300 transition-all">
             <div>
               <p class="font-bold text-slate-800">AVLO 02105 • Madrid ➔ Valencia</p>
               <p class="text-slate-400 mt-0.5">Salida est: 18:40 h</p>
             </div>
-            <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-800 font-bold">En hora</span>
+            <i class="fa-solid fa-location-dot text-slate-300 text-sm"></i>
           </div>
         </div>
       </div>
@@ -266,12 +252,12 @@
           <i id="arrow-cat-ld" class="fa-solid fa-chevron-right text-xs text-slate-400 transition-transform duration-200"></i>
         </div>
         <div id="cat-ld" class="hidden border-t border-slate-100 bg-slate-50/50 p-3 space-y-2">
-          <div class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+          <div onclick="goToTrainOnMap('ALVIA-04193')" class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs cursor-pointer hover:border-indigo-300 transition-all">
             <div>
               <p class="font-bold text-slate-800">ALVIA 04193 • Madrid ➔ Gijón</p>
               <p class="text-slate-400 mt-0.5">En trayecto • Próxima: Mieres</p>
             </div>
-            <span class="px-2 py-1 rounded bg-amber-100 text-amber-800 font-bold">+18 min</span>
+            <i class="fa-solid fa-location-dot text-indigo-600 text-sm"></i>
           </div>
         </div>
       </div>
@@ -286,12 +272,12 @@
           <i id="arrow-cat-md" class="fa-solid fa-chevron-right text-xs text-slate-400 transition-transform duration-200"></i>
         </div>
         <div id="cat-md" class="hidden border-t border-slate-100 bg-slate-50/50 p-3 space-y-2">
-          <div class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs">
+          <div onclick="goToTrainOnMap('REGIONAL-18012')" class="bg-white p-3 rounded-xl border border-slate-200/80 flex items-center justify-between text-xs cursor-pointer hover:border-indigo-300 transition-all">
             <div>
               <p class="font-bold text-slate-800">REGIONAL 18012 • Sevilla ➔ Cádiz</p>
-              <p class="text-slate-400 mt-0.5">En trayecto • Próxima: Jerez</p>
+              <p class="text-slate-400 mt-0.5">Salida est: 19:10 h</p>
             </div>
-            <span class="px-2 py-1 rounded bg-emerald-100 text-emerald-800 font-bold">En hora</span>
+            <i class="fa-solid fa-location-dot text-slate-300 text-sm"></i>
           </div>
         </div>
       </div>
@@ -302,7 +288,7 @@
   <section id="tab-mapa" class="tab-content">
     <div id="map"></div>
 
-    <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-col sheet-collapsed transition-all">
+    <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-col sheet-hidden transition-all">
       <div class="w-full flex flex-col h-full overflow-hidden">
         <div id="sheet-header" class="px-6 pb-4 bg-white border-b border-slate-100 select-none flex-shrink-0">
           <div id="drag-handle-bar" class="drag-handle-zone group w-full flex justify-center items-center">
@@ -331,8 +317,6 @@
               <p id="train-speed" class="text-xs text-slate-400 mt-1 font-medium"><i class="fa-solid fa-gauge-high mr-1"></i>245 km/h</p>
             </div>
           </div>
-
-          <div class="h-4 w-full"></div>
         </div>
 
         <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 pb-28">
@@ -343,7 +327,7 @@
               </div>
               <div>
                 <h3 id="incident-title" class="text-sm font-bold text-amber-900">Incidencia en la infraestructura</h3>
-                <p id="incident-desc" class="text-xs text-amber-700 mt-0.5 leading-relaxed">Retraso estimado de +15 min por regulación de tráfico.</p>
+                <p id="incident-desc" class="text-xs text-amber-700 mt-0.5 leading-relaxed">Retraso estimado por regulación de tráfico.</p>
               </div>
             </div>
           </div>
@@ -370,7 +354,6 @@
               </h3>
               <span class="text-xs text-slate-400 font-medium" id="stops-count-badge">4 paradas</span>
             </div>
-
             <div id="stops-timeline" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
             </div>
           </div>
@@ -403,68 +386,18 @@
 
     <div class="relative mb-5">
       <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
-      <input type="text" placeholder="Buscar estación..." class="w-full pl-11 pr-4 py-3 bg-white rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm">
+      <input type="text" id="station-search" oninput="filterStations()" placeholder="Buscar estación..." class="w-full pl-11 pr-4 py-3 bg-white rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm">
     </div>
 
-    <!-- Lista Limpia de Estaciones -->
-    <div class="space-y-2.5">
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all" onclick="openStationModal('Madrid Puerta de Atocha')">
-        <div class="flex items-center gap-3.5">
-          <button onclick="event.stopPropagation(); toggleFav(this)" class="text-amber-400 text-base">
-            <i class="fa-solid fa-star"></i>
-          </button>
-          <span class="font-bold text-slate-900 text-sm">Madrid Puerta de Atocha</span>
-        </div>
-        <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all" onclick="openStationModal('Gijón Sanz Crespo')">
-        <div class="flex items-center gap-3.5">
-          <button onclick="event.stopPropagation(); toggleFav(this)" class="text-amber-400 text-base">
-            <i class="fa-solid fa-star"></i>
-          </button>
-          <span class="font-bold text-slate-900 text-sm">Gijón Sanz Crespo</span>
-        </div>
-        <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all" onclick="openStationModal('Barcelona Sants')">
-        <div class="flex items-center gap-3.5">
-          <button onclick="event.stopPropagation(); toggleFav(this)" class="text-slate-300 hover:text-amber-400 text-base transition-colors">
-            <i class="fa-regular fa-star"></i>
-          </button>
-          <span class="font-bold text-slate-900 text-sm">Barcelona Sants</span>
-        </div>
-        <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all" onclick="openStationModal('Valencia Joaquín Sorolla')">
-        <div class="flex items-center gap-3.5">
-          <button onclick="event.stopPropagation(); toggleFav(this)" class="text-slate-300 hover:text-amber-400 text-base transition-colors">
-            <i class="fa-regular fa-star"></i>
-          </button>
-          <span class="font-bold text-slate-900 text-sm">Valencia Joaquín Sorolla</span>
-        </div>
-        <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-      </div>
-
-      <div class="bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all" onclick="openStationModal('Sevilla Santa Justa')">
-        <div class="flex items-center gap-3.5">
-          <button onclick="event.stopPropagation(); toggleFav(this)" class="text-slate-300 hover:text-amber-400 text-base transition-colors">
-            <i class="fa-regular fa-star"></i>
-          </button>
-          <span class="font-bold text-slate-900 text-sm">Sevilla Santa Justa</span>
-        </div>
-        <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
-      </div>
+    <div id="stations-list" class="space-y-2.5">
+      <!-- Inyectado dinámicamente -->
     </div>
   </section>
 
   <!-- ==================== MODAL PANEL SALIDAS / LLEGADAS DE ESTACIÓN ==================== -->
   <div id="station-modal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[3000] hidden flex flex-col justify-end">
-    <div class="bg-white rounded-t-3xl max-w-2xl w-full mx-auto max-h-[88vh] flex flex-col overflow-hidden shadow-2xl animate-in slide-in-from-bottom duration-300">
+    <div class="bg-white rounded-t-3xl max-w-2xl w-full mx-auto max-h-[88vh] flex flex-col overflow-hidden shadow-2xl">
       
-      <!-- Encabezado Modal -->
       <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-white">
         <div>
           <h2 id="modal-station-title" class="text-lg font-black text-slate-900">Madrid Puerta de Atocha</h2>
@@ -475,22 +408,21 @@
         </button>
       </div>
 
-      <!-- Selector Salidas / Llegadas -->
+      <!-- Selector Salidas / Llegadas (Sin iconos) -->
       <div class="p-4 bg-slate-50 border-b border-slate-100">
         <div class="bg-slate-200/80 p-1 rounded-xl flex gap-1">
-          <button id="btn-tab-salidas" onclick="setStationTab('salidas')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-plane-departure"></i> Salidas
+          <button id="btn-tab-salidas" onclick="setStationTab('salidas')" class="flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm transition-all flex items-center justify-center">
+            Salidas
           </button>
-          <button id="btn-tab-llegadas" onclick="setStationTab('llegadas')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center gap-2">
-            <i class="fa-solid fa-plane-arrival"></i> Llegadas
+          <button id="btn-tab-llegadas" onclick="setStationTab('llegadas')" class="flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 transition-all flex items-center justify-center">
+            Llegadas
           </button>
         </div>
       </div>
 
-      <!-- Lista de Trenes (Salidas o Llegadas) -->
       <div class="flex-1 overflow-y-auto p-4 space-y-2.5">
         <div id="station-trains-list" class="space-y-2.5">
-          <!-- Inyectado mediante JavaScript -->
+          <!-- Inyectado dinámicamente -->
         </div>
       </div>
     </div>
@@ -545,122 +477,18 @@
     </button>
   </nav>
 
-  <!-- ==================== SCRIPTS LÓGICA ==================== -->
+  <!-- ==================== SCRIPTS Y LÓGICA ==================== -->
   <script>
-    // --- CAMBIO DE PESTAÑAS ---
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+    // --- ESTADO DE ESTACIONES Y FAVORITOS ---
+    const stationsData = [
+      { id: 1, name: "Madrid Puerta de Atocha", fav: true },
+      { id: 2, name: "Gijón Sanz Crespo", fav: true },
+      { id: 3, name: "Barcelona Sants", fav: false },
+      { id: 4, name: "Valencia Joaquín Sorolla", fav: false },
+      { id: 5, name: "Sevilla Santa Justa", fav: false }
+    ];
 
-      document.getElementById('tab-' + tabId).classList.add('active');
-      document.getElementById('btn-' + tabId).classList.add('active');
-
-      if (tabId === 'mapa') {
-        setTimeout(() => {
-          if (!map) initMap();
-          else map.invalidateSize();
-        }, 150);
-      }
-    }
-
-    // --- FAVORITOS ESTACIONES ---
-    function toggleFav(btn) {
-      const icon = btn.querySelector('i');
-      if (icon.classList.contains('fa-solid')) {
-        icon.classList.remove('fa-solid');
-        icon.classList.add('fa-regular');
-        btn.classList.remove('text-amber-400');
-        btn.classList.add('text-slate-300');
-      } else {
-        icon.classList.remove('fa-regular');
-        icon.classList.add('fa-solid');
-        btn.classList.remove('text-slate-300');
-        btn.classList.add('text-amber-400');
-      }
-    }
-
-    // --- PESTAÑA LÍNEAS: DESPLEGABLES ---
-    function toggleLineCategory(catId) {
-      const el = document.getElementById(catId);
-      const arrow = document.getElementById('arrow-' + catId);
-
-      if (el.classList.contains('hidden')) {
-        el.classList.remove('hidden');
-        arrow.classList.add('rotate-90');
-      } else {
-        el.classList.add('hidden');
-        arrow.classList.remove('rotate-90');
-      }
-    }
-
-    // --- MODAL DE ESTACIONES (SALIDAS / LLEGADAS) ---
-    let currentStationName = '';
-    let currentStationMode = 'salidas';
-
-    const dummyStationData = {
-      salidas: [
-        { code: "AVE 03142", dest: "Barcelona Sants", time: "18:15", track: "Vía 4", status: "En hora", ok: true },
-        { code: "AVLO 02105", dest: "Valencia Joaquín Sorolla", time: "18:40", track: "Vía 2", status: "En hora", ok: true },
-        { code: "ALVIA 04193", dest: "Gijón Sanz Crespo", time: "19:05", track: "Vía 7", status: "+15 min", ok: false }
-      ],
-      llegadas: [
-        { code: "AVE 03111", dest: "Origen: Sevilla S.J.", time: "18:02", track: "Vía 1", status: "Llegado", ok: true },
-        { code: "INTERCITY 0122", dest: "Origen: Badajoz", time: "18:28", track: "Vía 5", status: "En hora", ok: true }
-      ]
-    };
-
-    function openStationModal(stationName) {
-      currentStationName = stationName;
-      document.getElementById('modal-station-title').textContent = stationName;
-      setStationTab('salidas');
-      document.getElementById('station-modal').classList.remove('hidden');
-    }
-
-    function closeStationModal() {
-      document.getElementById('station-modal').classList.add('hidden');
-    }
-
-    function setStationTab(mode) {
-      currentStationMode = mode;
-      const btnSalidas = document.getElementById('btn-tab-salidas');
-      const btnLlegadas = document.getElementById('btn-tab-llegadas');
-
-      if (mode === 'salidas') {
-        btnSalidas.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm flex items-center justify-center gap-2";
-        btnLlegadas.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
-      } else {
-        btnLlegadas.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm flex items-center justify-center gap-2";
-        btnSalidas.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center gap-2";
-      }
-
-      renderStationTrains();
-    }
-
-    function renderStationTrains() {
-      const container = document.getElementById('station-trains-list');
-      container.innerHTML = '';
-      const list = dummyStationData[currentStationMode];
-
-      list.forEach(item => {
-        const row = document.createElement('div');
-        row.className = "bg-white p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between text-xs shadow-sm";
-        row.innerHTML = `
-          <div class="flex items-center gap-3">
-            <span class="font-extrabold text-slate-900 text-sm w-12">${item.time}</span>
-            <div>
-              <p class="font-bold text-slate-800">${item.code}</p>
-              <p class="text-slate-400 text-[11px]">${item.dest} • <span class="text-slate-600 font-medium">${item.track}</span></p>
-            </div>
-          </div>
-          <span class="px-2.5 py-1 rounded-full font-bold text-[11px] ${item.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-            ${item.status}
-          </span>
-        `;
-        container.appendChild(row);
-      });
-    }
-
-    // --- DATOS DEL MAPA ---
+    // --- BASE DE DATOS DE TRENES EN TIEMPO REAL ---
     const trainsData = [
       {
         id: "AVE-03142",
@@ -673,6 +501,7 @@
         speed: "250 km/h",
         route: "Madrid P. Atocha ➔ Barcelona Sants",
         delay: 0,
+        active: true,
         incident: null,
         stops: [
           { name: "Madrid Puerta de Atocha", scheduledTime: "17:30", estimatedTime: "17:30", passed: true, platform: "Vía 4" },
@@ -694,9 +523,10 @@
         speed: "120 km/h",
         route: "Madrid Chamartín ➔ Gijón",
         delay: 18,
+        active: true,
         incident: {
           title: "Avería en sistema de electrificación",
-          description: "La circulación se realiza a velocidad reducida en el tramo Pola de Lena - Pajares por trabajos urgentes."
+          description: "La circulación se realiza a velocidad reducida en el tramo Pola de Lena - Pajares."
         },
         stops: [
           { name: "Madrid Chamartín Clara Campoamor", scheduledTime: "14:10", estimatedTime: "14:10", passed: true, platform: "Vía 12" },
@@ -709,12 +539,203 @@
       }
     ];
 
+    // DATOS DE SALIDAS Y LLEGADAS POR ESTACIÓN
+    const dummyStationData = {
+      salidas: [
+        { trainId: "AVE-03142", code: "AVE 03142", dest: "Barcelona Sants", time: "18:15", track: "Vía 4", status: "En hora", ok: true },
+        { trainId: "AVLO-02105", code: "AVLO 02105", dest: "Valencia Joaquín Sorolla", time: "18:40", track: "Vía 2", status: "En hora", ok: true },
+        { trainId: "ALVIA-04193", code: "ALVIA 04193", dest: "Gijón Sanz Crespo", time: "19:05", track: "Vía 7", status: "+18 min", ok: false }
+      ],
+      llegadas: [
+        { trainId: null, code: "AVE 03111", dest: "Origen: Sevilla S.J.", time: "18:02", track: "Vía 1", status: "Llegado", ok: true },
+        { trainId: null, code: "INTERCITY 0122", dest: "Origen: Badajoz", time: "18:28", track: "Vía 5", status: "En hora", ok: true }
+      ]
+    };
+
     let map = null;
     let selectedTrain = null;
 
+    // --- AL CARGAR LA PÁGINA ---
+    document.addEventListener('DOMContentLoaded', () => {
+      renderStationsList();
+      renderFavoritesList();
+    });
+
+    // --- CAMBIO DE PESTAÑAS ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.getElementById('btn-' + tabId).classList.add('active');
+
+      if (tabId === 'mapa') {
+        setTimeout(() => {
+          if (!map) initMap();
+          else map.invalidateSize();
+        }, 150);
+      }
+    }
+
+    // --- RENDERIZADO Y CONTROL DE ESTACIONES ---
+    function renderStationsList() {
+      const container = document.getElementById('stations-list');
+      container.innerHTML = '';
+
+      stationsData.forEach(st => {
+        const item = document.createElement('div');
+        item.className = "bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm flex items-center justify-between cursor-pointer hover:border-slate-300 transition-all";
+        item.onclick = () => openStationModal(st.name);
+        item.innerHTML = `
+          <div class="flex items-center gap-3.5">
+            <button onclick="event.stopPropagation(); toggleFav(${st.id})" class="${st.fav ? 'text-amber-400' : 'text-slate-300 hover:text-amber-400'} text-base transition-colors">
+              <i class="${st.fav ? 'fa-solid' : 'fa-regular'} fa-star"></i>
+            </button>
+            <span class="font-bold text-slate-900 text-sm">${st.name}</span>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function renderFavoritesList() {
+      const container = document.getElementById('favorites-list');
+      container.innerHTML = '';
+
+      const favs = stationsData.filter(st => st.fav);
+      if (favs.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-2">No tienes estaciones favoritas marcadas.</p>`;
+        return;
+      }
+
+      favs.forEach(st => {
+        const item = document.createElement('div');
+        item.className = "bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between cursor-pointer";
+        item.onclick = () => openStationModal(st.name);
+        item.innerHTML = `
+          <div class="flex items-center gap-3">
+            <i class="fa-solid fa-star text-amber-400 text-base"></i>
+            <p class="font-bold text-slate-800 text-sm">${st.name}</p>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function toggleFav(id) {
+      const station = stationsData.find(s => s.id === id);
+      if (station) {
+        station.fav = !station.fav;
+        renderStationsList();
+        renderFavoritesList();
+      }
+    }
+
+    function filterStations() {
+      const q = document.getElementById('station-search').value.toLowerCase();
+      const items = document.querySelectorAll('#stations-list > div');
+      items.forEach(el => {
+        const text = el.textContent.toLowerCase();
+        el.style.display = text.includes(q) ? 'flex' : 'none';
+      });
+    }
+
+    // --- LÍNEAS CATEGORÍAS ---
+    function toggleLineCategory(catId) {
+      const el = document.getElementById(catId);
+      const arrow = document.getElementById('arrow-' + catId);
+
+      if (el.classList.contains('hidden')) {
+        el.classList.remove('hidden');
+        arrow.classList.add('rotate-90');
+      } else {
+        el.classList.add('hidden');
+        arrow.classList.remove('rotate-90');
+      }
+    }
+
+    // --- MODAL DE ESTACIONES ---
+    let currentStationName = '';
+    let currentStationMode = 'salidas';
+
+    function openStationModal(stationName) {
+      currentStationName = stationName;
+      document.getElementById('modal-station-title').textContent = stationName;
+      setStationTab('salidas');
+      document.getElementById('station-modal').classList.remove('hidden');
+    }
+
+    function closeStationModal() {
+      document.getElementById('station-modal').classList.add('hidden');
+    }
+
+    function setStationTab(mode) {
+      currentStationMode = mode;
+      const btnSalidas = document.getElementById('btn-tab-salidas');
+      const btnLlegadas = document.getElementById('btn-tab-llegadas');
+
+      if (mode === 'salidas') {
+        btnSalidas.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm flex items-center justify-center";
+        btnLlegadas.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center";
+      } else {
+        btnLlegadas.className = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-indigo-600 shadow-sm flex items-center justify-center";
+        btnSalidas.className = "flex-1 py-2 text-xs font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center justify-center";
+      }
+
+      renderStationTrains();
+    }
+
+    function renderStationTrains() {
+      const container = document.getElementById('station-trains-list');
+      container.innerHTML = '';
+      const list = dummyStationData[currentStationMode];
+
+      list.forEach(item => {
+        const row = document.createElement('div');
+        row.className = "bg-white p-3.5 rounded-2xl border border-slate-200 flex items-center justify-between text-xs shadow-sm cursor-pointer hover:border-indigo-200 transition-all";
+        row.onclick = () => {
+          closeStationModal();
+          goToTrainOnMap(item.trainId);
+        };
+
+        row.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="font-extrabold text-slate-900 text-sm w-12">${item.time}</span>
+            <div>
+              <p class="font-bold text-slate-800">${item.code}</p>
+              <p class="text-slate-400 text-[11px]">${item.dest} • <span class="text-slate-600 font-medium">${item.track}</span></p>
+            </div>
+          </div>
+          <span class="px-2.5 py-1 rounded-full font-bold text-[11px] ${item.ok ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+            ${item.status}
+          </span>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    // --- IR AL TREN EN EL MAPA ---
+    function goToTrainOnMap(trainId) {
+      const train = trainsData.find(t => t.id === trainId);
+
+      if (!train || !train.active) {
+        alert("Este tren todavía no ha salido o ya ha completado su recorrido.");
+        return;
+      }
+
+      switchTab('mapa');
+      setTimeout(() => {
+        selectTrain(train);
+      }, 200);
+    }
+
+    // --- INICIALIZACIÓN DEL MAPA ---
     function initMap() {
       if (map) return;
 
+      // Centrado de vista inicial en toda España
       map = L.map('map', { zoomControl: false }).setView([40.4168, -3.7038], 6);
       L.control.zoom({ position: 'topright' }).addTo(map);
 
@@ -722,6 +743,11 @@
         maxZoom: 19,
         attribution: '&copy; CARTO'
       }).addTo(map);
+
+      // Al hacer clic sobre cualquier zona vacía del mapa, vuelve a la vista general de España y oculta el sheet
+      map.on('click', () => {
+        resetMapView();
+      });
 
       trainsData.forEach(train => {
         const isDelayed = train.delay > 5;
@@ -735,10 +761,20 @@
         });
 
         const marker = L.marker(train.coords, { icon: customIcon }).addTo(map);
-        marker.on('click', () => selectTrain(train));
+        marker.on('click', (e) => {
+          L.DomEvent.stopPropagation(e);
+          selectTrain(train);
+        });
       });
 
-      selectTrain(trainsData[0]);
+      // Vista inicial general de España sin forzar ningún tren cargado
+      resetMapView();
+    }
+
+    function resetMapView() {
+      if (!map) return;
+      map.flyTo([40.4168, -3.7038], 6, { duration: 1 });
+      setSheetState('hidden');
     }
 
     function selectTrain(train) {
@@ -824,16 +860,18 @@
       setSheetState('half');
     }
 
-    // Control Bottom Sheet (Barra Gris)
+    // --- SLIDER PANEL INFERIOR (BOTTOM SHEET) ---
     const sheet = document.getElementById('bottom-sheet');
     const dragHandleBar = document.getElementById('drag-handle-bar');
-    let currentState = 'half';
+    let currentState = 'hidden';
 
     function setSheetState(state) {
       currentState = state;
-      sheet.classList.remove('sheet-collapsed', 'sheet-half', 'sheet-expanded');
+      sheet.classList.remove('sheet-hidden', 'sheet-collapsed', 'sheet-half', 'sheet-expanded');
 
-      if (state === 'collapsed') {
+      if (state === 'hidden') {
+        sheet.classList.add('sheet-hidden');
+      } else if (state === 'collapsed') {
         sheet.classList.add('sheet-collapsed');
       } else if (state === 'half') {
         sheet.classList.add('sheet-half');
