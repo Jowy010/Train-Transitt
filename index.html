@@ -5,8 +5,366 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Train Transit</title>
   
+  <!-- Leaflet Map CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Estilos Globales y Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #f2f2f7;
+      color: #1c1c1e;
+    }
+
+    /* Manejo de Pestañas */
+    .tab-content {
+      display: none;
+      width: 100%;
+      height: calc(100vh - 80px);
+      overflow-y: auto;
+      padding-bottom: 90px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Encabezado */
+    .welcome-header {
+      padding: 24px 20px 16px;
+    }
+
+    .welcome-header h1 {
+      font-size: 32px;
+      font-weight: 800;
+      color: #1c1c1e;
+      letter-spacing: -0.5px;
+    }
+
+    /* Menú Principal: 4 Cuadrados Grandes */
+    .main-grid-menu {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding: 0 20px 24px;
+    }
+
+    .grid-card {
+      background: #ffffff;
+      height: 130px;
+      border-radius: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      cursor: pointer;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+
+    .grid-card:active {
+      transform: scale(0.96);
+      background-color: #f8f8fa;
+    }
+
+    .grid-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+    }
+
+    .grid-label {
+      font-weight: 700;
+      color: #1c1c1e;
+      font-size: 16px;
+    }
+
+    /* Bloques de Secciones (Estado y Estaciones) */
+    .card-section {
+      padding: 0 20px 24px;
+    }
+
+    .card-section h3 {
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #1c1c1e;
+      letter-spacing: -0.3px;
+    }
+
+    /* Banner Estado del Servicio */
+    .status-banner {
+      background: #eefbf3;
+      color: #0d8a39;
+      padding: 16px 18px;
+      border-radius: 18px;
+      font-weight: 600;
+      font-size: 15px;
+      border: 1px solid #c7f3d6;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Estaciones Favoritas */
+    .stations-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .station-card {
+      background: #ffffff;
+      padding: 16px 18px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .station-icon {
+      font-size: 26px;
+      background: #f2f2f7;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .station-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .station-info strong {
+      color: #1c1c1e;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .station-info small {
+      color: #8e8e93;
+      font-size: 13px;
+      margin-top: 2px;
+    }
+
+    /* Sección de Mapa */
+    #tab-mapa {
+      padding: 0;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #e5e3df;
+    }
+
+    /* Tarjeta Flotante Bottom Sheet */
+    .bottom-sheet {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border-radius: 28px 28px 0 0;
+      padding: 16px 20px 35px;
+      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+      z-index: 1500;
+      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    }
+
+    .bottom-sheet.hidden {
+      display: none !important;
+    }
+
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .sheet-drag-handle {
+      width: 40px;
+      height: 5px;
+      background: #e5e5ea;
+      border-radius: 3px;
+      margin: 0 auto;
+    }
+
+    .close-btn {
+      background: #f2f2f7;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      font-size: 18px;
+      font-weight: bold;
+      color: #8e8e93;
+      cursor: pointer;
+    }
+
+    .sheet-status {
+      font-size: 13px;
+      color: #34c759;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      background-color: #34c759;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .sheet-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+
+    .sheet-title-row h2 {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .badge {
+      background: #e60000;
+      color: white;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .sheet-subinfo {
+      color: #8e8e93;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .next-stop {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1c1c1e;
+      margin-bottom: 16px;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn-action {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      background: #f2f2f7;
+      font-weight: 600;
+      font-size: 14px;
+      color: #1c1c1e;
+      cursor: pointer;
+    }
+
+    .btn-action.active {
+      background: #007aff;
+      color: white;
+    }
+
+    /* Pestaña Líneas y Ajustes */
+    .lineas-container, .config-container {
+      padding: 24px 20px;
+    }
+
+    .lineas-container h2, .config-container h2 {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .config-list {
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    }
+
+    .config-item {
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f2f2f7;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .config-item:last-child {
+      border-bottom: none;
+    }
+
+    /* Menú Flotante Inferior */
+    .floating-nav {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 420px;
+      height: 66px;
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 35px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+      z-index: 2000;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .nav-btn {
+      border: none;
+      background: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #8e8e93;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      gap: 3px;
+    }
+
+    .nav-btn.active {
+      color: #e60000;
+      font-weight: 700;
+    }
+
+    .nav-btn .icon {
+      font-size: 22px;
+    }
+  </style>
 </head>
 <body>
 
@@ -16,7 +374,7 @@
       <h1>Train Transit</h1>
     </div>
 
-    <!-- Menú de 4 Cuadrados Grandes -->
+    <!-- Menú Principal: 4 Cuadrados Grandes -->
     <div class="main-grid-menu">
       <div class="grid-card" onclick="switchTab('inicio')">
         <span class="grid-icon">🏠</span>
@@ -39,7 +397,10 @@
     <!-- Estado del Servicio -->
     <div class="card-section">
       <h3>Estado del Servicio</h3>
-      <div class="status-banner info">🟢 Sin incidencias graves reportadas</div>
+      <div class="status-banner">
+        <span>🟢</span>
+        <span>Sin incidencias graves reportadas</span>
+      </div>
     </div>
 
     <!-- Estaciones Favoritas -->
@@ -56,56 +417,57 @@
         <div class="station-card">
           <span class="station-icon">🚉</span>
           <div class="station-info">
-            <strong>Sants</strong>
+            <strong>Barcelona Sants</strong>
             <small>Barcelona</small>
+          </div>
+        </div>
+        <div class="station-card">
+          <span class="station-icon">🚉</span>
+          <div class="station-info">
+            <strong>Gijón Sanz Crespo</strong>
+            <small>Asturias</small>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Pestaña 2: Mapa -->
-  <section id="tab-mapa" class="tab-content">
-    <div id="map"></div>
-
-    <div id="train-sheet" class="bottom-sheet hidden">
-      <div class="sheet-header">
-        <div class="sheet-drag-handle"></div>
-        <button class="close-btn" onclick="closeTrainSheet()">×</button>
-      </div>
-      <div class="sheet-status">
-        <span class="live-dot"></span> <span id="operator-name">Renfe Cercanías</span>
-      </div>
-      <div class="sheet-title-row">
-        <h2 id="train-line">C1</h2>
-        <span id="line-badge" class="badge">C1</span>
-      </div>
-      <div class="sheet-subinfo">
-        <span>Train</span> • <span id="train-speed">⏱️ -- km/h</span>
-      </div>
-      <p id="next-stop-text" class="next-stop">En camino a Palazuelo</p>
-
-      <div class="action-buttons">
-        <button class="btn-action">📍 Rastrear</button>
-        <button class="btn-action active">🎯 Siguiendo</button>
-        <button class="btn-action">🔀 Route View</button>
+  <!-- Pestaña 2: Líneas -->
+  <section id="tab-lineas" class="tab-content">
+    <div class="lineas-container">
+      <h2>Red Ferroviaria</h2>
+      <div class="config-list">
+        <div class="config-item"><span>Cercanías Asturias (C1, C2, C3)</span> <span>▶</span></div>
+        <div class="config-item"><span>Cercanías Madrid (C1 - C10)</span> <span>▶</span></div>
+        <div class="config-item"><span>Rodalies de Catalunya</span> <span>▶</span></div>
+        <div class="config-item"><span>Media Distancia / Regionales</span> <span>▶</span></div>
       </div>
     </div>
   </section>
 
-  <!-- Pestaña 3: Líneas -->
-  <section id="tab-lineas" class="tab-content">
-    <div class="lineas-container">
-      <h2>Red Ferroviaria</h2>
-      <div class="featured-cards">
-        <div class="card-featured ave">Alta Velocidad - Larga Distancia</div>
-        <div class="card-featured media">Media Distancia</div>
+  <!-- Pestaña 3: Mapa -->
+  <section id="tab-mapa" class="tab-content">
+    <div id="map"></div>
+
+    <!-- Hoja Inferior (Bottom Sheet - Oculta por defecto) -->
+    <div id="train-sheet" class="bottom-sheet hidden">
+      <div class="sheet-drag-handle"></div>
+      <div class="sheet-header">
+        <span class="sheet-status"><span class="live-dot"></span> <span id="operator-name">Renfe Cercanías</span></span>
+        <button class="close-btn" onclick="closeTrainSheet()">×</button>
       </div>
-      <h3>Núcleos de Cercanías</h3>
-      <div class="accordion">
-        <details><summary>Asturias</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span></div></details>
-        <details><summary>Madrid</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span><span>C5</span></div></details>
-        <details><summary>Rodalies de Catalunya</summary><div class="lines-grid"><span>R1</span><span>R2</span><span>R4</span></div></details>
+      <div class="sheet-title-row">
+        <h2 id="train-line">Tren C1</h2>
+        <span id="line-badge" class="badge">C1</span>
+      </div>
+      <div class="sheet-subinfo">
+        <span>Tren de Cercanías</span> • <span id="train-speed">⏱️ 78 km/h</span>
+      </div>
+      <p id="next-stop-text" class="next-stop">Próxima parada: Oviedo</p>
+
+      <div class="action-buttons">
+        <button class="btn-action">📍 Rastrear</button>
+        <button class="btn-action active">🎯 Siguiendo</button>
       </div>
     </div>
   </section>
@@ -115,14 +477,14 @@
     <div class="config-container">
       <h2>Ajustes</h2>
       <div class="config-list">
-        <div class="config-item"><span>Notificaciones</span> <input type="checkbox" checked></div>
-        <div class="config-item"><span>Modo Oscuro</span> <input type="checkbox"></div>
-        <div class="config-item"><span>Datos en Vivo</span> <strong>Renfe Data</strong></div>
+        <div class="config-item"><span>Notificaciones</span> <input type="checkbox" checked style="width:20px; height:20px;"></div>
+        <div class="config-item"><span>Modo Oscuro</span> <input type="checkbox" style="width:20px; height:20px;"></div>
+        <div class="config-item"><span>Proveedor de Datos</span> <strong>Renfe API (Simulada)</strong></div>
       </div>
     </div>
   </section>
 
-  <!-- Menú Inferior de 4 Pestañas -->
+  <!-- Menú Inferior de Navegación -->
   <nav class="floating-nav">
     <button id="btn-inicio" class="nav-btn active" onclick="switchTab('inicio')">
       <span class="icon">🏠</span>
@@ -142,7 +504,78 @@
     </button>
   </nav>
 
+  <!-- Leaflet JavaScript -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="app.js"></script>
+
+  <script>
+    let map = null;
+
+    // Cambiar entre pestañas
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+
+      const activeTab = document.getElementById('tab-' + tabId);
+      if (activeTab) {
+        activeTab.classList.add('active');
+      }
+
+      const activeBtn = document.getElementById('btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('active');
+      }
+
+      // Si selecciona la pestaña Mapa, inicializamos o redimensionamos el mapa
+      if (tabId === 'mapa') {
+        setTimeout(() => {
+          if (!map) {
+            initMap();
+          } else {
+            map.invalidateSize();
+          }
+        }, 100);
+      }
+    }
+
+    // Inicializar mapa Leaflet
+    function initMap() {
+      map = L.map('map').setView([40.416775, -3.703790], 6); // Centro en España
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 18
+      }).addTo(map);
+
+      // Ejemplo de marcador de tren
+      const trainIcon = L.divIcon({
+        className: 'custom-train-marker',
+        html: '<div style="background:#e60000; color:white; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.3); border:2px solid white;">🚆</div>',
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      const trainMarker = L.marker([40.406, -3.689], { icon: trainIcon }).addTo(map);
+      
+      trainMarker.on('click', () => {
+        openTrainSheet('Cercanías C1', 'Atocha -> Chamartín', '82 km/h');
+      });
+    }
+
+    function openTrainSheet(line, nextStop, speed) {
+      document.getElementById('train-line').textContent = line;
+      document.getElementById('next-stop-text').textContent = 'Próxima parada: ' + nextStop;
+      document.getElementById('train-speed').textContent = '⏱️ ' + speed;
+      document.getElementById('train-sheet').classList.remove('hidden');
+    }
+
+    function closeTrainSheet() {
+      document.getElementById('train-sheet').classList.add('hidden');
+    }
+  </script>
 </body>
 </html>
