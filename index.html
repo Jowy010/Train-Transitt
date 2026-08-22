@@ -5,39 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Train Transit</title>
   
-  <!-- Leaflet CSS (Mapa) -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <!-- Pestaña 1: Inicio -->
-  <section id="tab-inicio" class="tab-content">
-    <div class="header-search">
-      <input type="text" placeholder="Buscar tren, estación o línea...">
+  <section id="tab-inicio" class="tab-content active">
+    <div class="welcome-header">
+      <h1>Train Transit</h1>
     </div>
-    <div class="card-section">
-      <h3>Líneas Favoritas</h3>
-      <div class="horizontal-scroll">
-        <div class="badge-card">C5</div>
-        <div class="badge-card">AVE</div>
-        <div class="badge-card">C1</div>
+
+    <!-- Menú de 4 Cuadrados Grandes -->
+    <div class="main-grid-menu">
+      <div class="grid-card" onclick="switchTab('inicio')">
+        <span class="grid-icon">🏠</span>
+        <span class="grid-label">Inicio</span>
+      </div>
+      <div class="grid-card" onclick="switchTab('lineas')">
+        <span class="grid-icon">🚆</span>
+        <span class="grid-label">Líneas</span>
+      </div>
+      <div class="grid-card" onclick="switchTab('mapa')">
+        <span class="grid-icon">🗺️</span>
+        <span class="grid-label">Mapa</span>
+      </div>
+      <div class="grid-card" onclick="switchTab('config')">
+        <span class="grid-icon">⚙️</span>
+        <span class="grid-label">Ajustes</span>
       </div>
     </div>
+
+    <!-- Estado del Servicio -->
     <div class="card-section">
       <h3>Estado del Servicio</h3>
-      <div class="status-banner info">Sin incidencias graves reportadas</div>
+      <div class="status-banner info">🟢 Sin incidencias graves reportadas</div>
+    </div>
+
+    <!-- Estaciones Favoritas -->
+    <div class="card-section">
+      <h3>Estaciones Favoritas</h3>
+      <div class="stations-list">
+        <div class="station-card">
+          <span class="station-icon">🚉</span>
+          <div class="station-info">
+            <strong>Atocha Cercanías</strong>
+            <small>Madrid</small>
+          </div>
+        </div>
+        <div class="station-card">
+          <span class="station-icon">🚉</span>
+          <div class="station-info">
+            <strong>Sants</strong>
+            <small>Barcelona</small>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
   <!-- Pestaña 2: Mapa -->
-  <section id="tab-mapa" class="tab-content active">
+  <section id="tab-mapa" class="tab-content">
     <div id="map"></div>
-    <div class="map-search-bar">
-      <input type="text" placeholder="Estaciones, rutas, ciudades...">
-    </div>
 
-    <!-- Bottom Sheet de Detalle del Tren -->
     <div id="train-sheet" class="bottom-sheet hidden">
       <div class="sheet-header">
         <div class="sheet-drag-handle"></div>
@@ -60,23 +90,6 @@
         <button class="btn-action active">🎯 Siguiendo</button>
         <button class="btn-action">🔀 Route View</button>
       </div>
-
-      <div class="progress-bar-container">
-        <div class="progress-line">
-          <div class="progress-dot"></div>
-          <div class="progress-arrow">➔</div>
-          <div class="progress-dot"></div>
-          <div class="progress-dot"></div>
-        </div>
-      </div>
-
-      <!-- Contenido expandible (Paradas) -->
-      <div class="sheet-expanded-content">
-        <h3>Itinerario</h3>
-        <ul id="stops-timeline" class="timeline">
-          <!-- Se cargan por JS -->
-        </ul>
-      </div>
     </div>
   </section>
 
@@ -84,41 +97,51 @@
   <section id="tab-lineas" class="tab-content">
     <div class="lineas-container">
       <h2>Red Ferroviaria</h2>
-      
-      <!-- Destacados -->
       <div class="featured-cards">
         <div class="card-featured ave">Alta Velocidad - Larga Distancia</div>
         <div class="card-featured media">Media Distancia</div>
       </div>
-
-      <!-- Cercanías -->
       <h3>Núcleos de Cercanías</h3>
       <div class="accordion">
         <details><summary>Asturias</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span></div></details>
-        <details><summary>Bilbao</summary><div class="lines-grid"><span>C1</span><span>C2</span></div></details>
         <details><summary>Madrid</summary><div class="lines-grid"><span>C1</span><span>C2</span><span>C3</span><span>C5</span></div></details>
         <details><summary>Rodalies de Catalunya</summary><div class="lines-grid"><span>R1</span><span>R2</span><span>R4</span></div></details>
       </div>
     </div>
   </section>
 
-  <!-- Menú de Navegación Flotante -->
+  <!-- Pestaña 4: Ajustes -->
+  <section id="tab-config" class="tab-content">
+    <div class="config-container">
+      <h2>Ajustes</h2>
+      <div class="config-list">
+        <div class="config-item"><span>Notificaciones</span> <input type="checkbox" checked></div>
+        <div class="config-item"><span>Modo Oscuro</span> <input type="checkbox"></div>
+        <div class="config-item"><span>Datos en Vivo</span> <strong>Renfe Data</strong></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Menú Inferior de 4 Pestañas -->
   <nav class="floating-nav">
-    <button class="nav-btn" onclick="switchTab('inicio')">
+    <button id="btn-inicio" class="nav-btn active" onclick="switchTab('inicio')">
       <span class="icon">🏠</span>
       <span class="label">Inicio</span>
     </button>
-    <button class="nav-btn active" onclick="switchTab('mapa')">
-      <span class="icon">🗺️</span>
-      <span class="label">Mapa</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('lineas')">
+    <button id="btn-lineas" class="nav-btn" onclick="switchTab('lineas')">
       <span class="icon">🚆</span>
       <span class="label">Líneas</span>
     </button>
+    <button id="btn-mapa" class="nav-btn" onclick="switchTab('mapa')">
+      <span class="icon">🗺️</span>
+      <span class="label">Mapa</span>
+    </button>
+    <button id="btn-config" class="nav-btn" onclick="switchTab('config')">
+      <span class="icon">⚙️</span>
+      <span class="label">Ajustes</span>
+    </button>
   </nav>
 
-  <!-- JS de Leaflet y Aplicación -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
