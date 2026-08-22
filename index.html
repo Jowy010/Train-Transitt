@@ -109,8 +109,8 @@
       bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
-      width: 92%;
-      max-width: 420px;
+      width: 94%;
+      max-width: 440px;
       height: 62px;
       background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(16px);
@@ -121,6 +121,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.1);
       border: 1px solid rgba(226, 232, 240, 0.8);
       z-index: 2000;
+      padding: 0 4px;
     }
 
     .nav-btn {
@@ -131,7 +132,7 @@
       align-items: center;
       gap: 3px;
       color: #64748b;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
       cursor: pointer;
       flex: 1;
@@ -144,7 +145,7 @@
     }
 
     .nav-btn i {
-      font-size: 18px;
+      font-size: 17px;
     }
   </style>
 </head>
@@ -189,14 +190,14 @@
         <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
           <i class="fa-solid fa-map-location-dot"></i>
         </div>
-        <span class="font-bold text-slate-800 text-sm">Mapa Mapa</span>
+        <span class="font-bold text-slate-800 text-sm">Mapa</span>
       </div>
 
-      <div onclick="switchTab('config')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
+      <div onclick="switchTab('estaciones')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
         <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
-          <i class="fa-solid fa-gear"></i>
+          <i class="fa-solid fa-building-columns"></i>
         </div>
-        <span class="font-bold text-slate-800 text-sm">Ajustes</span>
+        <span class="font-bold text-slate-800 text-sm">Estaciones</span>
       </div>
     </div>
 
@@ -206,7 +207,7 @@
         <i class="fa-solid fa-star text-amber-500"></i> Estaciones Favoritas
       </h2>
       <div class="space-y-2.5">
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between cursor-pointer" onclick="switchTab('estaciones')">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
               <i class="fa-solid fa-building-columns"></i>
@@ -219,7 +220,7 @@
           <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
         </div>
 
-        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between cursor-pointer" onclick="switchTab('estaciones')">
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
               <i class="fa-solid fa-building-columns"></i>
@@ -269,23 +270,17 @@
 
   <!-- ==================== PESTAÑA: MAPA ==================== -->
   <section id="tab-mapa" class="tab-content">
-    
-    <!-- Contenedor del Mapa Leaflet -->
     <div id="map"></div>
 
     <!-- Bottom Sheet / Panel Desplegable del Tren -->
     <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-col sheet-collapsed transition-all">
       <div class="w-full flex flex-col h-full overflow-hidden">
         
-        <!-- Área de Arrastre & Encabezado Limpio -->
         <div id="sheet-header" class="px-6 pb-4 bg-white border-b border-slate-100 select-none flex-shrink-0">
-          
-          <!-- BARRA GRIS INTERACTIVA (Al pulsar sube/baja la ficha) -->
           <div id="drag-handle-bar" class="drag-handle-zone group w-full flex justify-center items-center">
             <div class="w-14 h-1.5 bg-slate-300 group-hover:bg-slate-400 rounded-full transition-colors"></div>
           </div>
 
-          <!-- Ficha del Tren (Sin botones, con espacio blanco limpio) -->
           <div class="flex items-start justify-between gap-4 mt-1">
             <div class="flex items-center gap-3.5">
               <div id="train-icon-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100">
@@ -300,7 +295,6 @@
               </div>
             </div>
 
-            <!-- Estado general del tren -->
             <div class="text-right">
               <div id="train-delay-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
                 <i class="fa-solid fa-circle-check"></i>
@@ -310,14 +304,10 @@
             </div>
           </div>
 
-          <!-- Espacio en blanco limpio solicitado -->
           <div class="h-4 w-full"></div>
         </div>
 
-        <!-- Contenido Desplegable (Paradas, incidencias, etc.) -->
         <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 pb-28">
-          
-          <!-- Incidencias u Avisos -->
           <div id="incident-container" class="hidden">
             <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3.5">
               <div class="p-2 bg-amber-500 text-white rounded-xl text-sm flex-shrink-0">
@@ -330,7 +320,6 @@
             </div>
           </div>
 
-          <!-- Resumen de progreso -->
           <div class="grid grid-cols-2 gap-3">
             <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
               <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Próxima Parada</span>
@@ -345,7 +334,6 @@
             </div>
           </div>
 
-          <!-- Listado Completo de Paradas e Itinerario -->
           <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
             <div class="flex items-center justify-between mb-4">
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -355,12 +343,10 @@
               <span class="text-xs text-slate-400 font-medium" id="stops-count-badge">4 paradas</span>
             </div>
 
-            <!-- Timeline de Estaciones -->
             <div id="stops-timeline" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
             </div>
           </div>
 
-          <!-- Información adicional -->
           <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm grid grid-cols-3 gap-2 text-center">
             <div>
               <span class="text-[11px] font-medium text-slate-400 block">Vía Principal</span>
@@ -375,7 +361,79 @@
               <span id="train-operator" class="text-xs font-bold text-slate-700 mt-0.5 block">Renfe AVE</span>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </section>
 
+  <!-- ==================== PESTAÑA: ESTACIONES ==================== -->
+  <section id="tab-estaciones" class="tab-content p-5 pb-24">
+    <div class="pt-2 mb-4">
+      <h1 class="text-2xl font-black text-slate-900 tracking-tight">Estaciones</h1>
+      <p class="text-xs text-slate-500 font-medium">Información de terminales y salidas</p>
+    </div>
+
+    <!-- Buscador de Estaciones -->
+    <div class="relative mb-4">
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" placeholder="Buscar por ciudad o nombre de estación..." class="w-full pl-11 pr-4 py-3 bg-white rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm">
+    </div>
+
+    <div class="space-y-3">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Madrid Puerta de Atocha</h3>
+              <p class="text-xs text-slate-400">Madrid • Alta Velocidad y Media Distancia</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-star text-amber-400 text-sm"></i>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Próxima salida: <strong class="text-slate-800">AVE 03142</strong> (18:15h)</span>
+          <span class="text-indigo-600 font-semibold cursor-pointer">Ver panel <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Gijón Sanz Crespo</h3>
+              <p class="text-xs text-slate-400">Asturias • Cercanías y Larga Distancia</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-star text-amber-400 text-sm"></i>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Próxima salida: <strong class="text-slate-800">Cercanías C-1</strong> (18:25h)</span>
+          <span class="text-indigo-600 font-semibold cursor-pointer">Ver panel <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
+        </div>
+      </div>
+
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 text-slate-600 flex items-center justify-center font-bold">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800 text-sm">Barcelona Sants</h3>
+              <p class="text-xs text-slate-400">Barcelona • Internacional, AVE y Cercanías</p>
+            </div>
+          </div>
+          <i class="fa-regular fa-star text-slate-300 text-sm"></i>
+        </div>
+        <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+          <span>Próxima salida: <strong class="text-slate-800">TGV 9702</strong> (18:30h)</span>
+          <span class="text-indigo-600 font-semibold cursor-pointer">Ver panel <i class="fa-solid fa-chevron-right text-[10px]"></i></span>
         </div>
       </div>
     </div>
@@ -419,6 +477,10 @@
     <button id="btn-mapa" class="nav-btn" onclick="switchTab('mapa')">
       <i class="fa-solid fa-map-location-dot"></i>
       <span>Mapa</span>
+    </button>
+    <button id="btn-estaciones" class="nav-btn" onclick="switchTab('estaciones')">
+      <i class="fa-solid fa-building-columns"></i>
+      <span>Estaciones</span>
     </button>
     <button id="btn-config" class="nav-btn" onclick="switchTab('config')">
       <i class="fa-solid fa-gear"></i>
@@ -522,7 +584,6 @@
         marker.on('click', () => selectTrain(train));
       });
 
-      // Seleccionar primer tren por defecto
       selectTrain(trainsData[0]);
     }
 
@@ -627,7 +688,6 @@
       }
     }
 
-    // Evento al pulsar la barrita gris
     dragHandleBar.addEventListener('click', () => {
       if (currentState === 'expanded') {
         setSheetState('half');
@@ -636,7 +696,6 @@
       }
     });
 
-    // Soporte para arrastrar la barrita
     let startY = 0;
     dragHandleBar.addEventListener('touchstart', (e) => {
       startY = e.touches[0].clientY;
