@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Rastreador de Trenes en Tiempo Real</title>
+  <title>Train Transit</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -24,27 +24,36 @@
     body {
       font-family: 'Inter', sans-serif;
       touch-action: manipulation;
+      background-color: #f8fafc;
+      color: #0f172a;
     }
-    
-    #map {
-      height: 100vh;
+
+    /* Navegación y Pestañas */
+    .tab-content {
+      display: none;
       width: 100vw;
+      height: calc(100vh - 75px);
+      overflow-y: auto;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Estilos Específicos del Mapa */
+    #tab-mapa {
+      height: calc(100vh - 75px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    #map {
+      height: 100%;
+      width: 100%;
       z-index: 1;
     }
 
-    /* Custom scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #f1f5f9;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 9999px;
-    }
-
-    /* Pulse markers */
+    /* Marcadores del mapa */
     .train-marker-container {
       display: flex;
       align-items: center;
@@ -69,7 +78,7 @@
       transform: scale(1.15);
     }
 
-    /* Bottom Sheet Slider */
+    /* Bottom Sheet Slider del Mapa */
     #bottom-sheet {
       transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
       z-index: 1000;
@@ -77,11 +86,11 @@
     }
 
     .sheet-collapsed {
-      transform: translateY(calc(100% - 150px));
+      transform: translateY(calc(100% - 145px));
     }
 
     .sheet-half {
-      transform: translateY(calc(100% - 380px));
+      transform: translateY(calc(100% - 370px));
     }
 
     .sheet-expanded {
@@ -95,151 +104,384 @@
       cursor: grabbing;
     }
 
-    /* Leaflet popup styling overrides */
-    .leaflet-popup-content-wrapper {
-      border-radius: 16px;
-      padding: 4px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    /* Barra de Navegación Flotante Inferior */
+    .floating-nav {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 92%;
+      max-width: 420px;
+      height: 62px;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(16px);
+      border-radius: 28px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      z-index: 2000;
+    }
+
+    .nav-btn {
+      border: none;
+      background: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      color: #64748b;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn.active {
+      color: #4f46e5;
+      font-weight: 700;
+    }
+
+    .nav-btn i {
+      font-size: 18px;
     }
   </style>
 </head>
-<body class="bg-slate-900 overflow-hidden relative text-slate-800">
+<body class="overflow-hidden relative">
 
-  <!-- Header / Navigation Bar -->
-  <header class="absolute top-4 left-4 right-4 md:left-6 md:right-auto z-[999] bg-white/95 backdrop-blur-md px-5 py-3.5 rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between gap-4 max-w-md">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
-        <i class="fa-solid fa-train-subway text-lg"></i>
-      </div>
+  <!-- ==================== PESTAÑA: INICIO ==================== -->
+  <section id="tab-inicio" class="tab-content active p-5 pb-24">
+    <!-- Header Principal -->
+    <div class="flex items-center justify-between mb-6 pt-2">
       <div>
-        <h1 class="font-bold text-slate-900 text-base leading-tight">Monitor Red Ferroviaria</h1>
-        <p class="text-xs text-slate-500 font-medium">Estado en vivo & recorridos</p>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">Train Transit</h1>
+        <p class="text-xs text-slate-500 font-medium">Panel principal de control</p>
+      </div>
+      <div class="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+        <i class="fa-solid fa-user text-sm"></i>
       </div>
     </div>
-    <div class="flex items-center gap-2">
-      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
-        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        En línea
-      </span>
+
+    <!-- Buscador Integrado -->
+    <div class="relative mb-6">
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+      <input type="text" placeholder="Buscar línea, estación o tren..." class="w-full pl-11 pr-4 py-3.5 bg-white rounded-2xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 shadow-sm transition-all">
     </div>
-  </header>
 
-  <!-- Interactive Map -->
-  <div id="map"></div>
+    <!-- Menú Principal: Grid 4 Accesos -->
+    <div class="grid grid-cols-2 gap-3.5 mb-6">
+      <div onclick="switchTab('inicio')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
+        <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-house"></i>
+        </div>
+        <span class="font-bold text-slate-800 text-sm">Inicio</span>
+      </div>
 
-  <!-- Bottom Sheet / Panel Desplegable del Tren Seleccionado -->
-  <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-direction-col sheet-collapsed transition-all">
-    <div class="w-full flex flex-col h-full overflow-hidden">
-      
-      <!-- Area de Arrastre & Encabezado Limpio -->
-      <div id="sheet-header" class="drag-handle px-6 pt-3 pb-4 bg-white border-b border-slate-100 select-none flex-shrink-0">
-        <!-- Indicador visual de deslizamiento -->
-        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+      <div onclick="switchTab('lineas')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
+        <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-train"></i>
+        </div>
+        <span class="font-bold text-slate-800 text-sm">Líneas</span>
+      </div>
 
-        <!-- Ficha del Tren (Sin botones de "Rastrea", con espacio en blanco) -->
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex items-center gap-3.5">
-            <div id="train-icon-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100">
-              <i class="fa-solid fa-train"></i>
+      <div onclick="switchTab('mapa')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
+        <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-map-location-dot"></i>
+        </div>
+        <span class="font-bold text-slate-800 text-sm">Mapa Mapa</span>
+      </div>
+
+      <div onclick="switchTab('config')" class="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col items-center justify-center text-center gap-2 cursor-pointer active:scale-95 transition-transform">
+        <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
+          <i class="fa-solid fa-gear"></i>
+        </div>
+        <span class="font-bold text-slate-800 text-sm">Ajustes</span>
+      </div>
+    </div>
+
+    <!-- Estado General de la Red -->
+    <div class="mb-6">
+      <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-shield-halved text-indigo-600"></i> Estado del Servicio
+      </h2>
+      <div class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center gap-3">
+        <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+        <div>
+          <p class="text-xs font-bold text-emerald-900">Operación Normal</p>
+          <p class="text-[11px] text-emerald-700 mt-0.5">Circulación fluida en la mayoría de líneas principales.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estaciones Favoritas -->
+    <div>
+      <h2 class="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
+        <i class="fa-solid fa-star text-amber-500"></i> Estaciones Favoritas
+      </h2>
+      <div class="space-y-2.5">
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
+              <i class="fa-solid fa-building-columns"></i>
             </div>
             <div>
-              <div class="flex items-center gap-2">
-                <h2 id="train-code" class="text-xl font-extrabold text-slate-900">AVE 03142</h2>
-                <span id="train-type-badge" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider">Alta Velocidad</span>
-              </div>
-              <p id="train-route-name" class="text-sm font-medium text-slate-500 mt-0.5">Madrid Puerta de Atocha ➔ Barcelona Sants</p>
+              <p class="font-bold text-slate-800 text-sm">Atocha Cercanías</p>
+              <p class="text-xs text-slate-400">Madrid • Próxima salida 12 min</p>
             </div>
           </div>
-
-          <!-- Estado general (Retraso / Puntualidad) -->
-          <div class="text-right">
-            <div id="train-delay-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
-              <i class="fa-solid fa-circle-check"></i>
-              <span>En hora</span>
-            </div>
-            <p id="train-speed" class="text-xs text-slate-400 mt-1 font-medium"><i class="fa-solid fa-gauge-high mr-1"></i>245 km/h</p>
-          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
         </div>
 
-        <!-- Espacio en blanco limpio solicitado (sin botones rastrea ni acciones redundantes) -->
-        <div class="h-6 w-full"></div>
+        <div class="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold">
+              <i class="fa-solid fa-building-columns"></i>
+            </div>
+            <div>
+              <p class="font-bold text-slate-800 text-sm">Gijón Sanz Crespo</p>
+              <p class="text-xs text-slate-400">Asturias • En hora</p>
+            </div>
+          </div>
+          <i class="fa-solid fa-chevron-right text-xs text-slate-300"></i>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        <!-- Botón/Indicador discreto para expandir -->
-        <button id="toggle-expand-btn" class="w-full py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 flex items-center justify-center gap-2 transition-colors border border-slate-200">
-          <span id="expand-btn-text">Desliza o pulsa para ver paradas e incidencias</span>
-          <i id="expand-btn-icon" class="fa-solid fa-chevron-up transition-transform duration-300"></i>
-        </button>
+  <!-- ==================== PESTAÑA: LÍNEAS ==================== -->
+  <section id="tab-lineas" class="tab-content p-5 pb-24">
+    <div class="pt-2 mb-6">
+      <h1 class="text-2xl font-black text-slate-900 tracking-tight">Líneas y Redes</h1>
+      <p class="text-xs text-slate-500 font-medium">Consulta los núcleos ferroviarios</p>
+    </div>
+
+    <div class="space-y-3">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg bg-red-600 text-white font-bold flex items-center justify-center text-xs">C1</span>
+          <div>
+            <p class="font-bold text-slate-800 text-sm">Cercanías C-1</p>
+            <p class="text-xs text-slate-400">Gijón ➔ Pola de Lena</p>
+          </div>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold">En hora</span>
       </div>
 
-      <!-- Contenido Desplegable (Visibilidad completa al subir la barra) -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+      <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-xs">AVE</span>
+          <div>
+            <p class="font-bold text-slate-800 text-sm">Alta Velocidad Madrid - Barcelona</p>
+            <p class="text-xs text-slate-400">Atocha ➔ Sants</p>
+          </div>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold">En hora</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== PESTAÑA: MAPA (MONITOR RED FERROVIARIA COMPLETO) ==================== -->
+  <section id="tab-mapa" class="tab-content">
+    
+    <!-- Header flotante del mapa: Monitor Red Ferroviaria -->
+    <header class="absolute top-4 left-4 right-4 md:left-6 md:right-auto z-[999] bg-white/95 backdrop-blur-md px-5 py-3.5 rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between gap-4 max-w-md">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+          <i class="fa-solid fa-train-subway text-lg"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-slate-900 text-base leading-tight">Monitor Red Ferroviaria</h1>
+          <p class="text-xs text-slate-500 font-medium">Estado en vivo & recorridos</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          En línea
+        </span>
+      </div>
+    </header>
+
+    <!-- Contenedor del Mapa Leaflet -->
+    <div id="map"></div>
+
+    <!-- Bottom Sheet / Panel Desplegable del Tren -->
+    <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-col sheet-collapsed transition-all">
+      <div class="w-full flex flex-col h-full overflow-hidden">
         
-        <!-- Sección de Incidencias u Avisos -->
-        <div id="incident-container" class="hidden">
-          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3.5">
-            <div class="p-2 bg-amber-500 text-white rounded-xl text-sm flex-shrink-0">
-              <i class="fa-solid fa-triangle-exclamation"></i>
+        <!-- Área de Arrastre & Encabezado Limpio -->
+        <div id="sheet-header" class="drag-handle px-6 pt-3 pb-4 bg-white border-b border-slate-100 select-none flex-shrink-0">
+          <!-- Indicador visual de deslizamiento -->
+          <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+
+          <!-- Ficha del Tren (Sin botones de "Rastrea", espacio en blanco) -->
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div id="train-icon-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100">
+                <i class="fa-solid fa-train"></i>
+              </div>
+              <div>
+                <div class="flex items-center gap-2">
+                  <h2 id="train-code" class="text-xl font-extrabold text-slate-900">AVE 03142</h2>
+                  <span id="train-type-badge" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider">Alta Velocidad</span>
+                </div>
+                <p id="train-route-name" class="text-sm font-medium text-slate-500 mt-0.5">Madrid Puerta de Atocha ➔ Barcelona Sants</p>
+              </div>
+            </div>
+
+            <!-- Estado general -->
+            <div class="text-right">
+              <div id="train-delay-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
+                <i class="fa-solid fa-circle-check"></i>
+                <span>En hora</span>
+              </div>
+              <p id="train-speed" class="text-xs text-slate-400 mt-1 font-medium"><i class="fa-solid fa-gauge-high mr-1"></i>245 km/h</p>
+            </div>
+          </div>
+
+          <!-- Espacio en blanco limpio solicitado -->
+          <div class="h-6 w-full"></div>
+
+          <!-- Botón / Indicador discreto para expandir -->
+          <button id="toggle-expand-btn" class="w-full py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 flex items-center justify-center gap-2 transition-colors border border-slate-200">
+            <span id="expand-btn-text">Desliza o pulsa para ver paradas e incidencias</span>
+            <i id="expand-btn-icon" class="fa-solid fa-chevron-up transition-transform duration-300"></i>
+          </button>
+        </div>
+
+        <!-- Contenido Desplegable (Paradas, incidencias, etc.) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50 pb-28">
+          
+          <!-- Incidencias u Avisos -->
+          <div id="incident-container" class="hidden">
+            <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3.5">
+              <div class="p-2 bg-amber-500 text-white rounded-xl text-sm flex-shrink-0">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+              <div>
+                <h3 id="incident-title" class="text-sm font-bold text-amber-900">Incidencia en la infraestructura</h3>
+                <p id="incident-desc" class="text-xs text-amber-700 mt-0.5 leading-relaxed">Retraso estimado de +15 min por regulación de tráfico.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resumen de progreso -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+              <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Próxima Parada</span>
+              <p id="next-stop-name" class="font-bold text-slate-800 text-sm truncate">Zaragoza - Delicias</p>
+              <p id="next-stop-time" class="text-xs text-indigo-600 font-semibold mt-1">Llegada est. 18:45 h</p>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+              <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Destino Final</span>
+              <p id="final-stop-name" class="font-bold text-slate-800 text-sm truncate">Barcelona Sants</p>
+              <p id="final-stop-time" class="text-xs text-slate-500 font-medium mt-1">Llegada est. 19:50 h</p>
+            </div>
+          </div>
+
+          <!-- Listado Completo de Paradas e Itinerario -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-indigo-600"></i>
+                Itinerario y Paradas
+              </h3>
+              <span class="text-xs text-slate-400 font-medium" id="stops-count-badge">4 paradas</span>
+            </div>
+
+            <!-- Timeline de Estaciones -->
+            <div id="stops-timeline" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+            </div>
+          </div>
+
+          <!-- Información adicional -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm grid grid-cols-3 gap-2 text-center">
+            <div>
+              <span class="text-[11px] font-medium text-slate-400 block">Vía Principal</span>
+              <span id="train-track" class="text-xs font-bold text-slate-700 mt-0.5 block">Vía 3</span>
+            </div>
+            <div class="border-x border-slate-100">
+              <span class="text-[11px] font-medium text-slate-400 block">Composición</span>
+              <span id="train-cars" class="text-xs font-bold text-slate-700 mt-0.5 block">Simple</span>
             </div>
             <div>
-              <h3 id="incident-title" class="text-sm font-bold text-amber-900">Incidencia en la infraestructura</h3>
-              <p id="incident-desc" class="text-xs text-amber-700 mt-0.5 leading-relaxed">Retraso estimado de +15 min por regulación de tráfico en la señalización de entrada a estación.</p>
+              <span class="text-[11px] font-medium text-slate-400 block">Operador</span>
+              <span id="train-operator" class="text-xs font-bold text-slate-700 mt-0.5 block">Renfe AVE</span>
             </div>
           </div>
+
         </div>
-
-        <!-- Resumen de progreso y siguiente parada -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Próxima Parada</span>
-            <p id="next-stop-name" class="font-bold text-slate-800 text-sm truncate">Zaragoza - Delicias</p>
-            <p id="next-stop-time" class="text-xs text-indigo-600 font-semibold mt-1">Llegada est. 18:45 h</p>
-          </div>
-
-          <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
-            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Destino Final</span>
-            <p id="final-stop-name" class="font-bold text-slate-800 text-sm truncate">Barcelona Sants</p>
-            <p id="final-stop-time" class="text-xs text-slate-500 font-medium mt-1">Llegada est. 19:50 h</p>
-          </div>
-        </div>
-
-        <!-- Listado Completo de Paradas e Itinerario -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-          <div class="flex items-center justify-between mb-4">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-              <i class="fa-solid fa-list-check text-indigo-600"></i>
-              Itinerario y Paradas
-            </h3>
-            <span class="text-xs text-slate-400 font-medium" id="stops-count-badge">4 paradas</span>
-          </div>
-
-          <!-- Timeline de Estaciones -->
-          <div id="stops-timeline" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
-            <!-- Paradas inyectadas dinámicamente -->
-          </div>
-        </div>
-
-        <!-- Información adicional del convoy -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm grid grid-cols-3 gap-2 text-center">
-          <div>
-            <span class="text-[11px] font-medium text-slate-400 block">Vía Principal</span>
-            <span id="train-track" class="text-xs font-bold text-slate-700 mt-0.5 block">Vía 3</span>
-          </div>
-          <div class="border-x border-slate-100">
-            <span class="text-[11px] font-medium text-slate-400 block">Composición</span>
-            <span id="train-cars" class="text-xs font-bold text-slate-700 mt-0.5 block">Simple (8 coches)</span>
-          </div>
-          <div>
-            <span class="text-[11px] font-medium text-slate-400 block">Operador</span>
-            <span id="train-operator" class="text-xs font-bold text-slate-700 mt-0.5 block">Renfe AVE</span>
-          </div>
-        </div>
-
       </div>
     </div>
-  </div>
+  </section>
 
+  <!-- ==================== PESTAÑA: AJUSTES ==================== -->
+  <section id="tab-config" class="tab-content p-5 pb-24">
+    <div class="pt-2 mb-6">
+      <h1 class="text-2xl font-black text-slate-900 tracking-tight">Configuración</h1>
+      <p class="text-xs text-slate-500 font-medium">Ajustes de la aplicación</p>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100">
+      <div class="p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-bell text-slate-500"></i>
+          <span class="text-sm font-semibold text-slate-800">Notificaciones de retraso</span>
+        </div>
+        <input type="checkbox" checked class="w-4 h-4 accent-indigo-600">
+      </div>
+      <div class="p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-moon text-slate-500"></i>
+          <span class="text-sm font-semibold text-slate-800">Modo Oscuro</span>
+        </div>
+        <input type="checkbox" class="w-4 h-4 accent-indigo-600">
+      </div>
+    </div>
+  </section>
+
+  <!-- ==================== BARRA DE NAVEGACIÓN FLOTANTE ==================== -->
+  <nav class="floating-nav">
+    <button id="btn-inicio" class="nav-btn active" onclick="switchTab('inicio')">
+      <i class="fa-solid fa-house"></i>
+      <span>Inicio</span>
+    </button>
+    <button id="btn-lineas" class="nav-btn" onclick="switchTab('lineas')">
+      <i class="fa-solid fa-train"></i>
+      <span>Líneas</span>
+    </button>
+    <button id="btn-mapa" class="nav-btn" onclick="switchTab('mapa')">
+      <i class="fa-solid fa-map-location-dot"></i>
+      <span>Mapa</span>
+    </button>
+    <button id="btn-config" class="nav-btn" onclick="switchTab('config')">
+      <i class="fa-solid fa-gear"></i>
+      <span>Ajustes</span>
+    </button>
+  </nav>
+
+  <!-- ==================== SCRIPTS LÓGICA ==================== -->
   <script>
-    // --- DATOS DE PRUEBA (TRENES, RUTAS, PARADAS E INCIDENCIAS) ---
+    // --- CAMBIO DE PESTAÑAS ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.getElementById('btn-' + tabId).classList.add('active');
+
+      if (tabId === 'mapa') {
+        setTimeout(() => {
+          if (!map) initMap();
+          else map.invalidateSize();
+        }, 150);
+      }
+    }
+
+    // --- DATOS DEL MAPA ---
     const trainsData = [
       {
         id: "AVE-03142",
@@ -248,10 +490,10 @@
         operator: "Renfe AVE",
         track: "Vía 2",
         cars: "Doble (16 coches)",
-        coords: [41.6488, -0.8896], // Zaragoza aprox
+        coords: [41.6488, -0.8896],
         speed: "250 km/h",
         route: "Madrid P. Atocha ➔ Barcelona Sants",
-        delay: 0, // Minutos de retraso
+        delay: 0,
         incident: null,
         stops: [
           { name: "Madrid Puerta de Atocha", scheduledTime: "17:30", estimatedTime: "17:30", passed: true, platform: "Vía 4" },
@@ -269,13 +511,13 @@
         operator: "Renfe",
         track: "Vía 1",
         cars: "Simple (4 coches)",
-        coords: [43.3614, -5.8593], // Oviedo
+        coords: [43.3614, -5.8593],
         speed: "120 km/h",
         route: "Madrid Chamartín ➔ Gijón",
-        delay: 18, // Retraso de 18 min
+        delay: 18,
         incident: {
           title: "Avería en sistema de electrificación",
-          description: "La circulación se realiza a velocidad reducida en el tramo Pola de Lena - Pajares por trabajos de mantenimiento urgente."
+          description: "La circulación se realiza a velocidad reducida en el tramo Pola de Lena - Pajares por trabajos urgentes."
         },
         stops: [
           { name: "Madrid Chamartín Clara Campoamor", scheduledTime: "14:10", estimatedTime: "14:10", passed: true, platform: "Vía 12" },
@@ -285,113 +527,46 @@
           { name: "Oviedo", scheduledTime: "18:10", estimatedTime: "18:28", passed: false, platform: "Vía 3" },
           { name: "Gijón Sanz Crespo", scheduledTime: "18:38", estimatedTime: "18:56", passed: false, platform: "Vía 1" }
         ]
-      },
-      {
-        id: "MD-18023",
-        code: "MD 18023",
-        type: "Media Distancia",
-        operator: "Renfe Regional",
-        track: "Vía 5",
-        cars: "Simple",
-        coords: [37.3891, -5.9845], // Sevilla
-        speed: "0 km/h (En Estación)",
-        route: "Sevilla Santa Justa ➔ Cádiz",
-        delay: 4,
-        incident: {
-          title: "Demora por regulación de paso",
-          description: "Cruce de trenes en vía única provocado por densidad de tráfico ferroviario."
-        },
-        stops: [
-          { name: "Sevilla Santa Justa", scheduledTime: "18:00", estimatedTime: "18:04", current: true, platform: "Vía 8" },
-          { name: "Sevilla San Bernardo", scheduledTime: "18:05", estimatedTime: "18:09", passed: false, platform: "Vía 1" },
-          { name: "Dos Hermanas", scheduledTime: "18:18", estimatedTime: "18:22", passed: false, platform: "Vía 2" },
-          { name: "Jerez de la Frontera", scheduledTime: "19:02", estimatedTime: "19:06", passed: false, platform: "Vía 1" },
-          { name: "Puerto Real", scheduledTime: "19:20", estimatedTime: "19:24", passed: false, platform: "Vía 2" },
-          { name: "Cádiz", scheduledTime: "19:40", estimatedTime: "19:44", passed: false, platform: "Vía 4" }
-        ]
-      },
-      {
-        id: "EUROMED-01200",
-        code: "EUROMED 01200",
-        type: "Alta Velocidad",
-        operator: "Renfe",
-        track: "Vía 2",
-        cars: "Simple",
-        coords: [39.4699, -0.3763], // Valencia
-        speed: "200 km/h",
-        route: "Valencia Joaquín Sorolla ➔ Barcelona Sants",
-        delay: 0,
-        incident: null,
-        stops: [
-          { name: "Valencia Joaquín Sorolla", scheduledTime: "17:10", estimatedTime: "17:10", passed: true, platform: "Vía 3" },
-          { name: "Castellón de la Plana", scheduledTime: "17:50", estimatedTime: "17:50", current: true, platform: "Vía 2" },
-          { name: "Camp de Tarragona", scheduledTime: "19:10", estimatedTime: "19:10", passed: false, platform: "Vía 1" },
-          { name: "Barcelona Sants", scheduledTime: "19:55", estimatedTime: "19:55", passed: false, platform: "Vía 6" }
-        ]
       }
     ];
 
-    // --- INICIALIZACIÓN DEL MAPA ---
-    const map = L.map('map', {
-      zoomControl: false
-    }).setView([40.4168, -3.7038], 6); // Centrado en España
-
-    // Añadir control de zoom en posición cómoda
-    L.control.zoom({ position: 'topright' }).addTo(map);
-
-    // CartoDB Positron Map Tiles (Limpio y claro)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-      maxZoom: 19,
-      subdomains: 'abcd',
-      attribution: '&copy; OpenStreetMap &copy; CARTO'
-    }).addTo(map);
-
+    let map = null;
     let selectedTrain = null;
-    const markers = {};
 
-    // Crear marcadores para cada tren
-    trainsData.forEach(train => {
-      const isDelayed = train.delay > 5;
-      const badgeColor = isDelayed ? 'bg-amber-500' : (train.delay > 0 ? 'bg-yellow-500' : 'bg-indigo-600');
-      
-      const customIcon = L.divIcon({
-        className: 'custom-train-icon',
-        html: `
-          <div class="train-marker-container">
-            <div class="train-badge ${badgeColor}">
-              <i class="fa-solid fa-train text-sm"></i>
-            </div>
-          </div>
-        `,
-        iconSize: [40, 40],
-        iconAnchor: [20, 20]
+    function initMap() {
+      if (map) return;
+
+      map = L.map('map', { zoomControl: false }).setView([40.4168, -3.7038], 6);
+      L.control.zoom({ position: 'topright' }).addTo(map);
+
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        attribution: '&copy; CARTO'
+      }).addTo(map);
+
+      trainsData.forEach(train => {
+        const isDelayed = train.delay > 5;
+        const badgeColor = isDelayed ? 'bg-amber-500' : 'bg-indigo-600';
+        
+        const customIcon = L.divIcon({
+          className: 'custom-train-icon',
+          html: `<div class="train-marker-container"><div class="train-badge ${badgeColor}"><i class="fa-solid fa-train text-sm"></i></div></div>`,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
+        });
+
+        const marker = L.marker(train.coords, { icon: customIcon }).addTo(map);
+        marker.on('click', () => selectTrain(train));
       });
 
-      const marker = L.marker(train.coords, { icon: customIcon }).addTo(map);
-      
-      // Al hacer clic en el mapa sobre un tren:
-      marker.on('click', () => {
-        selectTrain(train);
-      });
+      // Seleccionar primer tren por defecto
+      selectTrain(trainsData[0]);
+    }
 
-      markers[train.id] = marker;
-    });
-
-    // --- ELEMENTOS DOM DEL SHEET ---
-    const sheet = document.getElementById('bottom-sheet');
-    const sheetHeader = document.getElementById('sheet-header');
-    const toggleExpandBtn = document.getElementById('toggle-expand-btn');
-    const expandBtnText = document.getElementById('expand-btn-text');
-    const expandBtnIcon = document.getElementById('expand-btn-icon');
-
-    // --- SELECCIONAR TREN Y ACTUALIZAR UI ---
     function selectTrain(train) {
       selectedTrain = train;
-
-      // 1. Centrar mapa en el tren suavemente
       map.flyTo(train.coords, 8, { duration: 1.2 });
 
-      // 2. Actualizar cabecera (Espacio limpio sin botones de rastreo)
       document.getElementById('train-code').textContent = train.code;
       document.getElementById('train-type-badge').textContent = train.type;
       document.getElementById('train-route-name').textContent = train.route;
@@ -400,7 +575,6 @@
       document.getElementById('train-cars').textContent = train.cars;
       document.getElementById('train-operator').textContent = train.operator;
 
-      // Icono y color del distintivo principal
       const iconBadge = document.getElementById('train-icon-badge');
       const delayPill = document.getElementById('train-delay-pill');
 
@@ -408,17 +582,12 @@
         iconBadge.className = "w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-amber-200";
         delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-semibold text-xs";
         delayPill.innerHTML = `<i class="fa-solid fa-clock"></i><span>Retraso +${train.delay} min</span>`;
-      } else if (train.delay > 0) {
-        iconBadge.className = "w-12 h-12 rounded-2xl bg-yellow-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-yellow-200";
-        delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-xs";
-        delayPill.innerHTML = `<i class="fa-solid fa-clock"></i><span>Retraso +${train.delay} min</span>`;
       } else {
         iconBadge.className = "w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100";
         delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs";
         delayPill.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>En hora</span>`;
       }
 
-      // 3. Mostrar u Ocultar Incidencia
       const incidentContainer = document.getElementById('incident-container');
       if (train.incident) {
         incidentContainer.classList.remove('hidden');
@@ -428,7 +597,6 @@
         incidentContainer.classList.add('hidden');
       }
 
-      // 4. Calcular Siguiente Parada y Destino
       const nextStop = train.stops.find(s => s.current || !s.passed) || train.stops[train.stops.length - 1];
       const finalStop = train.stops[train.stops.length - 1];
 
@@ -437,7 +605,6 @@
       document.getElementById('final-stop-name').textContent = finalStop.name;
       document.getElementById('final-stop-time').textContent = `Est. ${finalStop.estimatedTime} h`;
 
-      // 5. Generar Listado de Paradas (Itinerario)
       const timeline = document.getElementById('stops-timeline');
       timeline.innerHTML = '';
       document.getElementById('stops-count-badge').textContent = `${train.stops.length} paradas`;
@@ -446,7 +613,6 @@
         const item = document.createElement('div');
         item.className = 'relative flex items-start justify-between gap-3 text-xs';
 
-        // Punto del timeline
         let dotStyle = 'bg-slate-300 border-2 border-white ring-2 ring-slate-200';
         let nameStyle = 'text-slate-500 font-medium';
         let badge = '';
@@ -458,17 +624,11 @@
         } else if (stop.current) {
           dotStyle = 'bg-indigo-600 ring-4 ring-indigo-100 text-white animate-bounce';
           nameStyle = 'text-slate-900 font-extrabold text-sm';
-          badge = `<span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-200">En trayecto / Próxima</span>`;
-        } else if (index === train.stops.length - 1) {
-          nameStyle = 'text-slate-900 font-bold';
-          badge = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">Destino Final</span>`;
+          badge = `<span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-200">En trayecto</span>`;
         }
 
         item.innerHTML = `
-          <!-- Indicador en linea de tiempo -->
           <div class="absolute -left-[23px] top-0.5 w-3.5 h-3.5 rounded-full ${dotStyle} flex items-center justify-center"></div>
-
-          <!-- Información de la estación -->
           <div class="flex-1">
             <div class="flex items-center gap-2">
               <span class="${nameStyle}">${stop.name}</span>
@@ -476,23 +636,22 @@
             </div>
             <p class="text-[11px] text-slate-400 mt-0.5">${stop.platform || 'Vía no asignada'}</p>
           </div>
-
-          <!-- Horarios programados vs estimados -->
           <div class="text-right flex-shrink-0">
             <span class="font-bold text-slate-800 block">${stop.estimatedTime}</span>
-            ${stop.scheduledTime !== stop.estimatedTime ? `<span class="text-[10px] text-slate-400 line-through block">${stop.scheduledTime}</span>` : ''}
           </div>
         `;
-
         timeline.appendChild(item);
       });
 
-      // Muestra el panel en modo semi-desplegado inicialmente al pulsar
       setSheetState('half');
     }
 
-    // --- CONTROL DE ESTADOS DE LA BARRA INFERIOR ---
-    let currentState = 'collapsed'; // 'collapsed', 'half', 'expanded'
+    // Control de deslizamiento de la barra del mapa
+    const sheet = document.getElementById('bottom-sheet');
+    const toggleExpandBtn = document.getElementById('toggle-expand-btn');
+    const expandBtnText = document.getElementById('expand-btn-text');
+    const expandBtnIcon = document.getElementById('expand-btn-icon');
+    let currentState = 'collapsed';
 
     function setSheetState(state) {
       currentState = state;
@@ -513,41 +672,10 @@
       }
     }
 
-    // Toggle con el botón
     toggleExpandBtn.addEventListener('click', () => {
-      if (currentState === 'expanded') {
-        setSheetState('half');
-      } else {
-        setSheetState('expanded');
-      }
+      if (currentState === 'expanded') setSheetState('half');
+      else setSheetState('expanded');
     });
-
-    // Permitir arrastre suave (Touch / Drag)
-    let startY = 0;
-    let currentY = 0;
-
-    sheetHeader.addEventListener('touchstart', (e) => {
-      startY = e.touches[0].clientY;
-    });
-
-    sheetHeader.addEventListener('touchend', (e) => {
-      const diffY = startY - e.changedTouches[0].clientY;
-      if (diffY > 40) {
-        // Deslizar arriba
-        if (currentState === 'collapsed') setSheetState('half');
-        else if (currentState === 'half') setSheetState('expanded');
-      } else if (diffY < -40) {
-        // Deslizar abajo
-        if (currentState === 'expanded') setSheetState('half');
-        else if (currentState === 'half') setSheetState('collapsed');
-      }
-    });
-
-    // Seleccionar el primer tren por defecto al cargar la app
-    setTimeout(() => {
-      selectTrain(trainsData[0]);
-    }, 500);
-
   </script>
 </body>
 </html>
