@@ -3,579 +3,551 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Train Transit</title>
+  <title>Rastreador de Trenes en Tiempo Real</title>
   
-  <!-- Leaflet Map CSS -->
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
   <style>
-    /* Estilos Globales y Reset */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      -webkit-tap-highlight-color: transparent;
+    body {
+      font-family: 'Inter', sans-serif;
+      touch-action: manipulation;
     }
-
-    body, html {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #f2f2f7;
-      color: #1c1c1e;
-    }
-
-    /* Manejo de Pestañas */
-    .tab-content {
-      display: none;
-      width: 100%;
-      height: calc(100vh - 80px);
-      overflow-y: auto;
-      padding-bottom: 90px;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    /* Encabezado */
-    .welcome-header {
-      padding: 24px 20px 16px;
-    }
-
-    .welcome-header h1 {
-      font-size: 32px;
-      font-weight: 800;
-      color: #1c1c1e;
-      letter-spacing: -0.5px;
-    }
-
-    /* Menú Principal: 4 Cuadrados Grandes */
-    .main-grid-menu {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      padding: 0 20px 24px;
-    }
-
-    .grid-card {
-      background: #ffffff;
-      height: 130px;
-      border-radius: 22px;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-      cursor: pointer;
-      border: 1px solid rgba(0, 0, 0, 0.04);
-      transition: transform 0.15s ease, background-color 0.15s ease;
-    }
-
-    .grid-card:active {
-      transform: scale(0.96);
-      background-color: #f8f8fa;
-    }
-
-    .grid-icon {
-      font-size: 36px;
-      margin-bottom: 10px;
-    }
-
-    .grid-label {
-      font-weight: 700;
-      color: #1c1c1e;
-      font-size: 16px;
-    }
-
-    /* Bloques de Secciones (Estado y Estaciones) */
-    .card-section {
-      padding: 0 20px 24px;
-    }
-
-    .card-section h3 {
-      font-size: 20px;
-      font-weight: 700;
-      margin-bottom: 12px;
-      color: #1c1c1e;
-      letter-spacing: -0.3px;
-    }
-
-    /* Banner Estado del Servicio */
-    .status-banner {
-      background: #eefbf3;
-      color: #0d8a39;
-      padding: 16px 18px;
-      border-radius: 18px;
-      font-weight: 600;
-      font-size: 15px;
-      border: 1px solid #c7f3d6;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    /* Estaciones Favoritas */
-    .stations-list {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-
-    .station-card {
-      background: #ffffff;
-      padding: 16px 18px;
-      border-radius: 18px;
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-      border: 1px solid rgba(0, 0, 0, 0.03);
-    }
-
-    .station-icon {
-      font-size: 26px;
-      background: #f2f2f7;
-      padding: 8px;
-      border-radius: 12px;
-    }
-
-    .station-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .station-info strong {
-      color: #1c1c1e;
-      font-size: 16px;
-      font-weight: 600;
-    }
-
-    .station-info small {
-      color: #8e8e93;
-      font-size: 13px;
-      margin-top: 2px;
-    }
-
-    /* Sección de Mapa */
-    #tab-mapa {
-      padding: 0;
-      position: relative;
-    }
-
+    
     #map {
-      width: 100%;
-      height: 100%;
-      background: #e5e3df;
+      height: 100vh;
+      width: 100vw;
+      z-index: 1;
     }
 
-    /* Tarjeta Flotante Bottom Sheet */
-    .bottom-sheet {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #ffffff;
-      border-radius: 28px 28px 0 0;
-      padding: 16px 20px 35px;
-      box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
-      z-index: 1500;
-      transition: transform 0.3s cubic-bezier(0.1, 0.9, 0.2, 1);
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
     }
 
-    .bottom-sheet.hidden {
-      display: none !important;
-    }
-
-    .sheet-header {
+    /* Pulse markers */
+    .train-marker-container {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
+      justify-content: center;
     }
-
-    .sheet-drag-handle {
-      width: 40px;
-      height: 5px;
-      background: #e5e5ea;
-      border-radius: 3px;
-      margin: 0 auto;
-    }
-
-    .close-btn {
-      background: #f2f2f7;
-      border: none;
-      width: 30px;
-      height: 30px;
+    
+    .train-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
       border-radius: 50%;
-      font-size: 18px;
+      color: white;
       font-weight: bold;
-      color: #8e8e93;
-      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      border: 2px solid white;
+      transition: transform 0.2s ease;
     }
 
-    .sheet-status {
-      font-size: 13px;
-      color: #34c759;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 6px;
+    .train-badge:hover {
+      transform: scale(1.15);
     }
 
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #34c759;
-      border-radius: 50%;
-      display: inline-block;
+    /* Bottom Sheet Slider */
+    #bottom-sheet {
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 1000;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.15);
     }
 
-    .sheet-title-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 4px;
+    .sheet-collapsed {
+      transform: translateY(calc(100% - 150px));
     }
 
-    .sheet-title-row h2 {
-      font-size: 26px;
-      font-weight: 800;
+    .sheet-half {
+      transform: translateY(calc(100% - 380px));
     }
 
-    .badge {
-      background: #e60000;
-      color: white;
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
+    .sheet-expanded {
+      transform: translateY(0%);
     }
 
-    .sheet-subinfo {
-      color: #8e8e93;
-      font-size: 14px;
-      margin-bottom: 8px;
+    .drag-handle {
+      cursor: grab;
+    }
+    .drag-handle:active {
+      cursor: grabbing;
     }
 
-    .next-stop {
-      font-size: 15px;
-      font-weight: 600;
-      color: #1c1c1e;
-      margin-bottom: 16px;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 10px;
-    }
-
-    .btn-action {
-      flex: 1;
-      padding: 12px;
-      border-radius: 12px;
-      border: none;
-      background: #f2f2f7;
-      font-weight: 600;
-      font-size: 14px;
-      color: #1c1c1e;
-      cursor: pointer;
-    }
-
-    .btn-action.active {
-      background: #007aff;
-      color: white;
-    }
-
-    /* Pestaña Líneas y Ajustes */
-    .lineas-container, .config-container {
-      padding: 24px 20px;
-    }
-
-    .lineas-container h2, .config-container h2 {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 20px;
-    }
-
-    .config-list {
-      background: white;
-      border-radius: 18px;
-      overflow: hidden;
-      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
-    }
-
-    .config-item {
-      padding: 18px 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #f2f2f7;
-      font-size: 16px;
-      font-weight: 500;
-    }
-
-    .config-item:last-child {
-      border-bottom: none;
-    }
-
-    /* Menú Flotante Inferior */
-    .floating-nav {
-      position: fixed;
-      bottom: 16px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: calc(100% - 32px);
-      max-width: 420px;
-      height: 66px;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-radius: 35px;
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-      z-index: 2000;
-      border: 1px solid rgba(255, 255, 255, 0.6);
-    }
-
-    .nav-btn {
-      border: none;
-      background: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      color: #8e8e93;
-      font-size: 11px;
-      font-weight: 600;
-      cursor: pointer;
-      flex: 1;
-      gap: 3px;
-    }
-
-    .nav-btn.active {
-      color: #e60000;
-      font-weight: 700;
-    }
-
-    .nav-btn .icon {
-      font-size: 22px;
+    /* Leaflet popup styling overrides */
+    .leaflet-popup-content-wrapper {
+      border-radius: 16px;
+      padding: 4px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
   </style>
 </head>
-<body>
+<body class="bg-slate-900 overflow-hidden relative text-slate-800">
 
-  <!-- Pestaña 1: Inicio -->
-  <section id="tab-inicio" class="tab-content active">
-    <div class="welcome-header">
-      <h1>Train Transit</h1>
-    </div>
-
-    <!-- Menú Principal: 4 Cuadrados Grandes -->
-    <div class="main-grid-menu">
-      <div class="grid-card" onclick="switchTab('inicio')">
-        <span class="grid-icon">🏠</span>
-        <span class="grid-label">Inicio</span>
+  <!-- Header / Navigation Bar -->
+  <header class="absolute top-4 left-4 right-4 md:left-6 md:right-auto z-[999] bg-white/95 backdrop-blur-md px-5 py-3.5 rounded-2xl shadow-xl border border-slate-100 flex items-center justify-between gap-4 max-w-md">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
+        <i class="fa-solid fa-train-subway text-lg"></i>
       </div>
-      <div class="grid-card" onclick="switchTab('lineas')">
-        <span class="grid-icon">🚆</span>
-        <span class="grid-label">Líneas</span>
-      </div>
-      <div class="grid-card" onclick="switchTab('mapa')">
-        <span class="grid-icon">🗺️</span>
-        <span class="grid-label">Mapa</span>
-      </div>
-      <div class="grid-card" onclick="switchTab('config')">
-        <span class="grid-icon">⚙️</span>
-        <span class="grid-label">Ajustes</span>
+      <div>
+        <h1 class="font-bold text-slate-900 text-base leading-tight">Monitor Red Ferroviaria</h1>
+        <p class="text-xs text-slate-500 font-medium">Estado en vivo & recorridos</p>
       </div>
     </div>
-
-    <!-- Estado del Servicio -->
-    <div class="card-section">
-      <h3>Estado del Servicio</h3>
-      <div class="status-banner">
-        <span>🟢</span>
-        <span>Sin incidencias graves reportadas</span>
-      </div>
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-200">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        En línea
+      </span>
     </div>
+  </header>
 
-    <!-- Estaciones Favoritas -->
-    <div class="card-section">
-      <h3>Estaciones Favoritas</h3>
-      <div class="stations-list">
-        <div class="station-card">
-          <span class="station-icon">🚉</span>
-          <div class="station-info">
-            <strong>Atocha Cercanías</strong>
-            <small>Madrid</small>
+  <!-- Interactive Map -->
+  <div id="map"></div>
+
+  <!-- Bottom Sheet / Panel Desplegable del Tren Seleccionado -->
+  <div id="bottom-sheet" class="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white rounded-t-3xl border-t border-slate-200 h-[85vh] flex flex-direction-col sheet-collapsed transition-all">
+    <div class="w-full flex flex-col h-full overflow-hidden">
+      
+      <!-- Area de Arrastre & Encabezado Limpio -->
+      <div id="sheet-header" class="drag-handle px-6 pt-3 pb-4 bg-white border-b border-slate-100 select-none flex-shrink-0">
+        <!-- Indicador visual de deslizamiento -->
+        <div class="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-4"></div>
+
+        <!-- Ficha del Tren (Sin botones de "Rastrea", con espacio en blanco) -->
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div id="train-icon-badge" class="w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100">
+              <i class="fa-solid fa-train"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 id="train-code" class="text-xl font-extrabold text-slate-900">AVE 03142</h2>
+                <span id="train-type-badge" class="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-wider">Alta Velocidad</span>
+              </div>
+              <p id="train-route-name" class="text-sm font-medium text-slate-500 mt-0.5">Madrid Puerta de Atocha ➔ Barcelona Sants</p>
+            </div>
+          </div>
+
+          <!-- Estado general (Retraso / Puntualidad) -->
+          <div class="text-right">
+            <div id="train-delay-pill" class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>En hora</span>
+            </div>
+            <p id="train-speed" class="text-xs text-slate-400 mt-1 font-medium"><i class="fa-solid fa-gauge-high mr-1"></i>245 km/h</p>
           </div>
         </div>
-        <div class="station-card">
-          <span class="station-icon">🚉</span>
-          <div class="station-info">
-            <strong>Barcelona Sants</strong>
-            <small>Barcelona</small>
+
+        <!-- Espacio en blanco limpio solicitado (sin botones rastrea ni acciones redundantes) -->
+        <div class="h-6 w-full"></div>
+
+        <!-- Botón/Indicador discreto para expandir -->
+        <button id="toggle-expand-btn" class="w-full py-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-600 flex items-center justify-center gap-2 transition-colors border border-slate-200">
+          <span id="expand-btn-text">Desliza o pulsa para ver paradas e incidencias</span>
+          <i id="expand-btn-icon" class="fa-solid fa-chevron-up transition-transform duration-300"></i>
+        </button>
+      </div>
+
+      <!-- Contenido Desplegable (Visibilidad completa al subir la barra) -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-6 bg-slate-50/50">
+        
+        <!-- Sección de Incidencias u Avisos -->
+        <div id="incident-container" class="hidden">
+          <div class="p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3.5">
+            <div class="p-2 bg-amber-500 text-white rounded-xl text-sm flex-shrink-0">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div>
+              <h3 id="incident-title" class="text-sm font-bold text-amber-900">Incidencia en la infraestructura</h3>
+              <p id="incident-desc" class="text-xs text-amber-700 mt-0.5 leading-relaxed">Retraso estimado de +15 min por regulación de tráfico en la señalización de entrada a estación.</p>
+            </div>
           </div>
         </div>
-        <div class="station-card">
-          <span class="station-icon">🚉</span>
-          <div class="station-info">
-            <strong>Gijón Sanz Crespo</strong>
-            <small>Asturias</small>
+
+        <!-- Resumen de progreso y siguiente parada -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Próxima Parada</span>
+            <p id="next-stop-name" class="font-bold text-slate-800 text-sm truncate">Zaragoza - Delicias</p>
+            <p id="next-stop-time" class="text-xs text-indigo-600 font-semibold mt-1">Llegada est. 18:45 h</p>
+          </div>
+
+          <div class="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm">
+            <span class="text-xs font-medium text-slate-400 uppercase tracking-wider block mb-1">Destino Final</span>
+            <p id="final-stop-name" class="font-bold text-slate-800 text-sm truncate">Barcelona Sants</p>
+            <p id="final-stop-time" class="text-xs text-slate-500 font-medium mt-1">Llegada est. 19:50 h</p>
           </div>
         </div>
+
+        <!-- Listado Completo de Paradas e Itinerario -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-indigo-600"></i>
+              Itinerario y Paradas
+            </h3>
+            <span class="text-xs text-slate-400 font-medium" id="stops-count-badge">4 paradas</span>
+          </div>
+
+          <!-- Timeline de Estaciones -->
+          <div id="stops-timeline" class="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+            <!-- Paradas inyectadas dinámicamente -->
+          </div>
+        </div>
+
+        <!-- Información adicional del convoy -->
+        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm grid grid-cols-3 gap-2 text-center">
+          <div>
+            <span class="text-[11px] font-medium text-slate-400 block">Vía Principal</span>
+            <span id="train-track" class="text-xs font-bold text-slate-700 mt-0.5 block">Vía 3</span>
+          </div>
+          <div class="border-x border-slate-100">
+            <span class="text-[11px] font-medium text-slate-400 block">Composición</span>
+            <span id="train-cars" class="text-xs font-bold text-slate-700 mt-0.5 block">Simple (8 coches)</span>
+          </div>
+          <div>
+            <span class="text-[11px] font-medium text-slate-400 block">Operador</span>
+            <span id="train-operator" class="text-xs font-bold text-slate-700 mt-0.5 block">Renfe AVE</span>
+          </div>
+        </div>
+
       </div>
     </div>
-  </section>
-
-  <!-- Pestaña 2: Líneas -->
-  <section id="tab-lineas" class="tab-content">
-    <div class="lineas-container">
-      <h2>Red Ferroviaria</h2>
-      <div class="config-list">
-        <div class="config-item"><span>Cercanías Asturias (C1, C2, C3)</span> <span>▶</span></div>
-        <div class="config-item"><span>Cercanías Madrid (C1 - C10)</span> <span>▶</span></div>
-        <div class="config-item"><span>Rodalies de Catalunya</span> <span>▶</span></div>
-        <div class="config-item"><span>Media Distancia / Regionales</span> <span>▶</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pestaña 3: Mapa -->
-  <section id="tab-mapa" class="tab-content">
-    <div id="map"></div>
-
-    <!-- Hoja Inferior (Bottom Sheet - Oculta por defecto) -->
-    <div id="train-sheet" class="bottom-sheet hidden">
-      <div class="sheet-drag-handle"></div>
-      <div class="sheet-header">
-        <span class="sheet-status"><span class="live-dot"></span> <span id="operator-name">Renfe Cercanías</span></span>
-        <button class="close-btn" onclick="closeTrainSheet()">×</button>
-      </div>
-      <div class="sheet-title-row">
-        <h2 id="train-line">Tren C1</h2>
-        <span id="line-badge" class="badge">C1</span>
-      </div>
-      <div class="sheet-subinfo">
-        <span>Tren de Cercanías</span> • <span id="train-speed">⏱️ 78 km/h</span>
-      </div>
-      <p id="next-stop-text" class="next-stop">Próxima parada: Oviedo</p>
-
-      <div class="action-buttons">
-        <button class="btn-action">📍 Rastrear</button>
-        <button class="btn-action active">🎯 Siguiendo</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- Pestaña 4: Ajustes -->
-  <section id="tab-config" class="tab-content">
-    <div class="config-container">
-      <h2>Ajustes</h2>
-      <div class="config-list">
-        <div class="config-item"><span>Notificaciones</span> <input type="checkbox" checked style="width:20px; height:20px;"></div>
-        <div class="config-item"><span>Modo Oscuro</span> <input type="checkbox" style="width:20px; height:20px;"></div>
-        <div class="config-item"><span>Proveedor de Datos</span> <strong>Renfe API (Simulada)</strong></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Menú Inferior de Navegación -->
-  <nav class="floating-nav">
-    <button id="btn-inicio" class="nav-btn active" onclick="switchTab('inicio')">
-      <span class="icon">🏠</span>
-      <span class="label">Inicio</span>
-    </button>
-    <button id="btn-lineas" class="nav-btn" onclick="switchTab('lineas')">
-      <span class="icon">🚆</span>
-      <span class="label">Líneas</span>
-    </button>
-    <button id="btn-mapa" class="nav-btn" onclick="switchTab('mapa')">
-      <span class="icon">🗺️</span>
-      <span class="label">Mapa</span>
-    </button>
-    <button id="btn-config" class="nav-btn" onclick="switchTab('config')">
-      <span class="icon">⚙️</span>
-      <span class="label">Ajustes</span>
-    </button>
-  </nav>
-
-  <!-- Leaflet JavaScript -->
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </div>
 
   <script>
-    let map = null;
-
-    // Cambiar entre pestañas
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(tab => {
-        tab.classList.remove('active');
-      });
-
-      document.querySelectorAll('.nav-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-
-      const activeTab = document.getElementById('tab-' + tabId);
-      if (activeTab) {
-        activeTab.classList.add('active');
+    // --- DATOS DE PRUEBA (TRENES, RUTAS, PARADAS E INCIDENCIAS) ---
+    const trainsData = [
+      {
+        id: "AVE-03142",
+        code: "AVE 03142",
+        type: "Alta Velocidad",
+        operator: "Renfe AVE",
+        track: "Vía 2",
+        cars: "Doble (16 coches)",
+        coords: [41.6488, -0.8896], // Zaragoza aprox
+        speed: "250 km/h",
+        route: "Madrid P. Atocha ➔ Barcelona Sants",
+        delay: 0, // Minutos de retraso
+        incident: null,
+        stops: [
+          { name: "Madrid Puerta de Atocha", scheduledTime: "17:30", estimatedTime: "17:30", passed: true, platform: "Vía 4" },
+          { name: "Guadalajara - Yebes", scheduledTime: "17:52", estimatedTime: "17:52", passed: true, platform: "Vía 1" },
+          { name: "Zaragoza - Delicias", scheduledTime: "18:45", estimatedTime: "18:45", current: true, platform: "Vía 3" },
+          { name: "Lleida Pirineus", scheduledTime: "19:18", estimatedTime: "19:18", passed: false, platform: "Vía 2" },
+          { name: "Camp de Tarragona", scheduledTime: "19:42", estimatedTime: "19:42", passed: false, platform: "Vía 1" },
+          { name: "Barcelona Sants", scheduledTime: "20:15", estimatedTime: "20:15", passed: false, platform: "Vía 7" }
+        ]
+      },
+      {
+        id: "ALVIA-04193",
+        code: "ALVIA 04193",
+        type: "Larga Distancia",
+        operator: "Renfe",
+        track: "Vía 1",
+        cars: "Simple (4 coches)",
+        coords: [43.3614, -5.8593], // Oviedo
+        speed: "120 km/h",
+        route: "Madrid Chamartín ➔ Gijón",
+        delay: 18, // Retraso de 18 min
+        incident: {
+          title: "Avería en sistema de electrificación",
+          description: "La circulación se realiza a velocidad reducida en el tramo Pola de Lena - Pajares por trabajos de mantenimiento urgente."
+        },
+        stops: [
+          { name: "Madrid Chamartín Clara Campoamor", scheduledTime: "14:10", estimatedTime: "14:10", passed: true, platform: "Vía 12" },
+          { name: "Valladolid Campo Grande", scheduledTime: "15:20", estimatedTime: "15:25", passed: true, platform: "Vía 2" },
+          { name: "León", scheduledTime: "16:35", estimatedTime: "16:48", passed: true, platform: "Vía 1" },
+          { name: "Mieres del Camín", scheduledTime: "17:50", estimatedTime: "18:08", current: true, platform: "Vía 2" },
+          { name: "Oviedo", scheduledTime: "18:10", estimatedTime: "18:28", passed: false, platform: "Vía 3" },
+          { name: "Gijón Sanz Crespo", scheduledTime: "18:38", estimatedTime: "18:56", passed: false, platform: "Vía 1" }
+        ]
+      },
+      {
+        id: "MD-18023",
+        code: "MD 18023",
+        type: "Media Distancia",
+        operator: "Renfe Regional",
+        track: "Vía 5",
+        cars: "Simple",
+        coords: [37.3891, -5.9845], // Sevilla
+        speed: "0 km/h (En Estación)",
+        route: "Sevilla Santa Justa ➔ Cádiz",
+        delay: 4,
+        incident: {
+          title: "Demora por regulación de paso",
+          description: "Cruce de trenes en vía única provocado por densidad de tráfico ferroviario."
+        },
+        stops: [
+          { name: "Sevilla Santa Justa", scheduledTime: "18:00", estimatedTime: "18:04", current: true, platform: "Vía 8" },
+          { name: "Sevilla San Bernardo", scheduledTime: "18:05", estimatedTime: "18:09", passed: false, platform: "Vía 1" },
+          { name: "Dos Hermanas", scheduledTime: "18:18", estimatedTime: "18:22", passed: false, platform: "Vía 2" },
+          { name: "Jerez de la Frontera", scheduledTime: "19:02", estimatedTime: "19:06", passed: false, platform: "Vía 1" },
+          { name: "Puerto Real", scheduledTime: "19:20", estimatedTime: "19:24", passed: false, platform: "Vía 2" },
+          { name: "Cádiz", scheduledTime: "19:40", estimatedTime: "19:44", passed: false, platform: "Vía 4" }
+        ]
+      },
+      {
+        id: "EUROMED-01200",
+        code: "EUROMED 01200",
+        type: "Alta Velocidad",
+        operator: "Renfe",
+        track: "Vía 2",
+        cars: "Simple",
+        coords: [39.4699, -0.3763], // Valencia
+        speed: "200 km/h",
+        route: "Valencia Joaquín Sorolla ➔ Barcelona Sants",
+        delay: 0,
+        incident: null,
+        stops: [
+          { name: "Valencia Joaquín Sorolla", scheduledTime: "17:10", estimatedTime: "17:10", passed: true, platform: "Vía 3" },
+          { name: "Castellón de la Plana", scheduledTime: "17:50", estimatedTime: "17:50", current: true, platform: "Vía 2" },
+          { name: "Camp de Tarragona", scheduledTime: "19:10", estimatedTime: "19:10", passed: false, platform: "Vía 1" },
+          { name: "Barcelona Sants", scheduledTime: "19:55", estimatedTime: "19:55", passed: false, platform: "Vía 6" }
+        ]
       }
+    ];
 
-      const activeBtn = document.getElementById('btn-' + tabId);
-      if (activeBtn) {
-        activeBtn.classList.add('active');
-      }
+    // --- INICIALIZACIÓN DEL MAPA ---
+    const map = L.map('map', {
+      zoomControl: false
+    }).setView([40.4168, -3.7038], 6); // Centrado en España
 
-      // Si selecciona la pestaña Mapa, inicializamos o redimensionamos el mapa
-      if (tabId === 'mapa') {
-        setTimeout(() => {
-          if (!map) {
-            initMap();
-          } else {
-            map.invalidateSize();
-          }
-        }, 100);
-      }
-    }
+    // Añadir control de zoom en posición cómoda
+    L.control.zoom({ position: 'topright' }).addTo(map);
 
-    // Inicializar mapa Leaflet
-    function initMap() {
-      map = L.map('map').setView([40.416775, -3.703790], 6); // Centro en España
+    // CartoDB Positron Map Tiles (Limpio y claro)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom: 19,
+      subdomains: 'abcd',
+      attribution: '&copy; OpenStreetMap &copy; CARTO'
+    }).addTo(map);
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap contributors',
-        maxZoom: 18
-      }).addTo(map);
+    let selectedTrain = null;
+    const markers = {};
 
-      // Ejemplo de marcador de tren
-      const trainIcon = L.divIcon({
-        className: 'custom-train-marker',
-        html: '<div style="background:#e60000; color:white; border-radius:50%; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.3); border:2px solid white;">🚆</div>',
-        iconSize: [32, 32],
-        iconAnchor: [16, 16]
-      });
-
-      const trainMarker = L.marker([40.406, -3.689], { icon: trainIcon }).addTo(map);
+    // Crear marcadores para cada tren
+    trainsData.forEach(train => {
+      const isDelayed = train.delay > 5;
+      const badgeColor = isDelayed ? 'bg-amber-500' : (train.delay > 0 ? 'bg-yellow-500' : 'bg-indigo-600');
       
-      trainMarker.on('click', () => {
-        openTrainSheet('Cercanías C1', 'Atocha -> Chamartín', '82 km/h');
+      const customIcon = L.divIcon({
+        className: 'custom-train-icon',
+        html: `
+          <div class="train-marker-container">
+            <div class="train-badge ${badgeColor}">
+              <i class="fa-solid fa-train text-sm"></i>
+            </div>
+          </div>
+        `,
+        iconSize: [40, 40],
+        iconAnchor: [20, 20]
       });
+
+      const marker = L.marker(train.coords, { icon: customIcon }).addTo(map);
+      
+      // Al hacer clic en el mapa sobre un tren:
+      marker.on('click', () => {
+        selectTrain(train);
+      });
+
+      markers[train.id] = marker;
+    });
+
+    // --- ELEMENTOS DOM DEL SHEET ---
+    const sheet = document.getElementById('bottom-sheet');
+    const sheetHeader = document.getElementById('sheet-header');
+    const toggleExpandBtn = document.getElementById('toggle-expand-btn');
+    const expandBtnText = document.getElementById('expand-btn-text');
+    const expandBtnIcon = document.getElementById('expand-btn-icon');
+
+    // --- SELECCIONAR TREN Y ACTUALIZAR UI ---
+    function selectTrain(train) {
+      selectedTrain = train;
+
+      // 1. Centrar mapa en el tren suavemente
+      map.flyTo(train.coords, 8, { duration: 1.2 });
+
+      // 2. Actualizar cabecera (Espacio limpio sin botones de rastreo)
+      document.getElementById('train-code').textContent = train.code;
+      document.getElementById('train-type-badge').textContent = train.type;
+      document.getElementById('train-route-name').textContent = train.route;
+      document.getElementById('train-speed').innerHTML = `<i class="fa-solid fa-gauge-high mr-1"></i>${train.speed}`;
+      document.getElementById('train-track').textContent = train.track;
+      document.getElementById('train-cars').textContent = train.cars;
+      document.getElementById('train-operator').textContent = train.operator;
+
+      // Icono y color del distintivo principal
+      const iconBadge = document.getElementById('train-icon-badge');
+      const delayPill = document.getElementById('train-delay-pill');
+
+      if (train.delay > 5) {
+        iconBadge.className = "w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-amber-200";
+        delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100 text-amber-800 font-semibold text-xs";
+        delayPill.innerHTML = `<i class="fa-solid fa-clock"></i><span>Retraso +${train.delay} min</span>`;
+      } else if (train.delay > 0) {
+        iconBadge.className = "w-12 h-12 rounded-2xl bg-yellow-500 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-yellow-200";
+        delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 font-semibold text-xs";
+        delayPill.innerHTML = `<i class="fa-solid fa-clock"></i><span>Retraso +${train.delay} min</span>`;
+      } else {
+        iconBadge.className = "w-12 h-12 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl font-bold shadow-lg shadow-indigo-100";
+        delayPill.className = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 font-semibold text-xs";
+        delayPill.innerHTML = `<i class="fa-solid fa-circle-check"></i><span>En hora</span>`;
+      }
+
+      // 3. Mostrar u Ocultar Incidencia
+      const incidentContainer = document.getElementById('incident-container');
+      if (train.incident) {
+        incidentContainer.classList.remove('hidden');
+        document.getElementById('incident-title').textContent = train.incident.title;
+        document.getElementById('incident-desc').textContent = train.incident.description;
+      } else {
+        incidentContainer.classList.add('hidden');
+      }
+
+      // 4. Calcular Siguiente Parada y Destino
+      const nextStop = train.stops.find(s => s.current || !s.passed) || train.stops[train.stops.length - 1];
+      const finalStop = train.stops[train.stops.length - 1];
+
+      document.getElementById('next-stop-name').textContent = nextStop.name;
+      document.getElementById('next-stop-time').textContent = `Est. ${nextStop.estimatedTime} h`;
+      document.getElementById('final-stop-name').textContent = finalStop.name;
+      document.getElementById('final-stop-time').textContent = `Est. ${finalStop.estimatedTime} h`;
+
+      // 5. Generar Listado de Paradas (Itinerario)
+      const timeline = document.getElementById('stops-timeline');
+      timeline.innerHTML = '';
+      document.getElementById('stops-count-badge').textContent = `${train.stops.length} paradas`;
+
+      train.stops.forEach((stop, index) => {
+        const item = document.createElement('div');
+        item.className = 'relative flex items-start justify-between gap-3 text-xs';
+
+        // Punto del timeline
+        let dotStyle = 'bg-slate-300 border-2 border-white ring-2 ring-slate-200';
+        let nameStyle = 'text-slate-500 font-medium';
+        let badge = '';
+
+        if (stop.passed) {
+          dotStyle = 'bg-emerald-500 text-white ring-2 ring-emerald-100';
+          nameStyle = 'text-slate-400 font-medium line-through decoration-slate-300';
+          badge = `<span class="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-semibold">Completada</span>`;
+        } else if (stop.current) {
+          dotStyle = 'bg-indigo-600 ring-4 ring-indigo-100 text-white animate-bounce';
+          nameStyle = 'text-slate-900 font-extrabold text-sm';
+          badge = `<span class="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold border border-indigo-200">En trayecto / Próxima</span>`;
+        } else if (index === train.stops.length - 1) {
+          nameStyle = 'text-slate-900 font-bold';
+          badge = `<span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-semibold">Destino Final</span>`;
+        }
+
+        item.innerHTML = `
+          <!-- Indicador en linea de tiempo -->
+          <div class="absolute -left-[23px] top-0.5 w-3.5 h-3.5 rounded-full ${dotStyle} flex items-center justify-center"></div>
+
+          <!-- Información de la estación -->
+          <div class="flex-1">
+            <div class="flex items-center gap-2">
+              <span class="${nameStyle}">${stop.name}</span>
+              ${badge}
+            </div>
+            <p class="text-[11px] text-slate-400 mt-0.5">${stop.platform || 'Vía no asignada'}</p>
+          </div>
+
+          <!-- Horarios programados vs estimados -->
+          <div class="text-right flex-shrink-0">
+            <span class="font-bold text-slate-800 block">${stop.estimatedTime}</span>
+            ${stop.scheduledTime !== stop.estimatedTime ? `<span class="text-[10px] text-slate-400 line-through block">${stop.scheduledTime}</span>` : ''}
+          </div>
+        `;
+
+        timeline.appendChild(item);
+      });
+
+      // Muestra el panel en modo semi-desplegado inicialmente al pulsar
+      setSheetState('half');
     }
 
-    function openTrainSheet(line, nextStop, speed) {
-      document.getElementById('train-line').textContent = line;
-      document.getElementById('next-stop-text').textContent = 'Próxima parada: ' + nextStop;
-      document.getElementById('train-speed').textContent = '⏱️ ' + speed;
-      document.getElementById('train-sheet').classList.remove('hidden');
+    // --- CONTROL DE ESTADOS DE LA BARRA INFERIOR ---
+    let currentState = 'collapsed'; // 'collapsed', 'half', 'expanded'
+
+    function setSheetState(state) {
+      currentState = state;
+      sheet.classList.remove('sheet-collapsed', 'sheet-half', 'sheet-expanded');
+
+      if (state === 'collapsed') {
+        sheet.classList.add('sheet-collapsed');
+        expandBtnText.textContent = "Desliza o pulsa para ver paradas e incidencias";
+        expandBtnIcon.style.transform = "rotate(0deg)";
+      } else if (state === 'half') {
+        sheet.classList.add('sheet-half');
+        expandBtnText.textContent = "Desliza hacia arriba para ver todo el itinerario";
+        expandBtnIcon.style.transform = "rotate(0deg)";
+      } else if (state === 'expanded') {
+        sheet.classList.add('sheet-expanded');
+        expandBtnText.textContent = "Tocar para replegar";
+        expandBtnIcon.style.transform = "rotate(180deg)";
+      }
     }
 
-    function closeTrainSheet() {
-      document.getElementById('train-sheet').classList.add('hidden');
-    }
+    // Toggle con el botón
+    toggleExpandBtn.addEventListener('click', () => {
+      if (currentState === 'expanded') {
+        setSheetState('half');
+      } else {
+        setSheetState('expanded');
+      }
+    });
+
+    // Permitir arrastre suave (Touch / Drag)
+    let startY = 0;
+    let currentY = 0;
+
+    sheetHeader.addEventListener('touchstart', (e) => {
+      startY = e.touches[0].clientY;
+    });
+
+    sheetHeader.addEventListener('touchend', (e) => {
+      const diffY = startY - e.changedTouches[0].clientY;
+      if (diffY > 40) {
+        // Deslizar arriba
+        if (currentState === 'collapsed') setSheetState('half');
+        else if (currentState === 'half') setSheetState('expanded');
+      } else if (diffY < -40) {
+        // Deslizar abajo
+        if (currentState === 'expanded') setSheetState('half');
+        else if (currentState === 'half') setSheetState('collapsed');
+      }
+    });
+
+    // Seleccionar el primer tren por defecto al cargar la app
+    setTimeout(() => {
+      selectTrain(trainsData[0]);
+    }, 500);
+
   </script>
 </body>
 </html>
